@@ -42,7 +42,7 @@ _frameCount: .byte $00
   lda #$0D              // using block 13 for sprite0
   sta SPRITE_0_POINTER  // set block 13 as target address for Data of Sprite0
  
-  lda #$01              // enable...
+  lda #%00000001              // enable...
   sta $D015             // ...Sprite 0 => %0000 0001 (all sprites off except Sprite 0)
   
   lda #COLOR_BLACK      // load black color code into A
@@ -61,7 +61,7 @@ clean:
   // Build the Sprite
   ldx #$00              // init x
 build:
-  lda SPRITE_BUG, x     // load data at x
+  lda SPRITE_BALL, x     // load data at x
   sta SPRITE_0_DATA,x   // write into sprite data at x
   inx                   // increment x
   cpx #$7F              // is x <= 127?
@@ -74,6 +74,16 @@ build:
   sty SPRITE_0_Y_POSITION   // move sprite 0 to y position
 
 
+
+    lda #%11111111
+    sta $d01c // enable multicolor for all sprites
+
+    lda #$0f // sprite multicolor 1
+    sta $D025
+    lda #$02 // sprite multicolor 2
+    sta $D026
+    lda #GREEN
+    sta SPRITE_0_COLOR
 
 main_loop:
     waitForFrame()

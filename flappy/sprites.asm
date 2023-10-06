@@ -45,3 +45,22 @@ SPRITE_BUG:
 	.byte %00000000,%00000000,%00000000
 	.byte %00000000,%00000000,%00000000
 	.byte %11111111 // not used
+
+SPRITE_BALL:
+	.byte $01,$55,$40,$06,$aa,$90,$1a,$aa
+	.byte $a4,$1a,$ab,$e4,$6a,$aa,$b9,$6a
+	.byte $aa,$b9,$6a,$aa,$a9,$6a,$aa,$a9
+	.byte $6a,$aa,$a9,$6a,$aa,$a9,$6a,$aa
+	.byte $a9,$6a,$aa,$a9,$6a,$aa,$a9,$6a
+	.byte $aa,$a9,$6a,$aa,$a9,$6a,$aa,$a9
+	.byte $1a,$aa,$a4,$1a,$aa,$a4,$06,$aa
+	.byte $90,$01,$55,$40,$00,$00,$00,$84
+
+	.byte $01,$55,$40,$06,$aa,$90,$1a,$aa
+	.byte $a4,$1a,$ab,$e4,$6a,$aa,$b9,$6a
+	.byte $aa,$b9,$6a,$aa,$a9,$6a,$aa,$a9
+	.byte $6a,$aa,$6a,$6a,$aa,$a9,$6a,$aa
+	.byte $a9,$6a,$aa,$a9,$6a,$aa,$a9,$6a
+	.byte $aa,$a9,$6a,$aa,$a9,$6a,$aa,$a9
+	.byte $1a,$aa,$a4,$1a,$aa,$a4,$06,$aa
+	.byte $90,$01,$55,$40,$00,$00,$00,$84
