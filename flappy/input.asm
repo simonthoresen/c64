@@ -11,40 +11,40 @@
     lda #'r'
     sta $044f
 
-	lda JOY1_STATE
-	and #JOY_UP
+    lda #JOY_UP
+    bit JOY1_STATE
 	bne !+
 	lda $0426
 	ora #$80
 	sta $0426
 !:
 
-	lda JOY1_STATE
-	and #JOY_FIRE
+	lda #JOY_FIRE
+    bit JOY1_STATE
 	bne !+
 	lda $0427
 	ora #$80
 	sta $0427
 !:
 
-	lda JOY1_STATE
-	and #JOY_LEFT
+	lda #JOY_LEFT
+    bit JOY1_STATE
 	bne !+
 	lda $044d
 	ora #$80
 	sta $044d
 !:
 
-	lda JOY1_STATE
-	and #JOY_DOWN
+	lda #JOY_DOWN
+    bit JOY1_STATE
 	bne !+
 	lda $044e
 	ora #$80
 	sta $044e
 !:
 
-	lda JOY1_STATE
-	and #JOY_RIGHT
+	lda #JOY_RIGHT
+    bit JOY1_STATE
 	bne !+
 	lda $044f
 	ora #$80

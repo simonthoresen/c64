@@ -5,6 +5,8 @@
 .const JOY_LEFT 	= $04
 .const JOY_RIGHT 	= $08
 .const JOY_FIRE 	= $10
+
+
 /*
 .const ADR_SCREEN		= $0400
 .const BORDER_COLOR			= $D020
