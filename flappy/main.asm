@@ -35,7 +35,9 @@ build_sprite:
 .const  SPRITE_0_DATA       = $0340        
 
 .const  SPRITE_UPPER_X      = $D010
-  
+
+_frameCount: .byte $00
+
  main:
   lda #$0D              // using block 13 for sprite0
   sta SPRITE_0_POINTER  // set block 13 as target address for Data of Sprite0
@@ -53,16 +55,16 @@ build_sprite:
 clean:
   sta SPRITE_0_DATA,x   // write 0 into sprite data at x
   inx                   // increment x
-  cpx #$3F              // is x <= 63?
+  cpx #$7F              // is x <= 127?
   bne clean             // if yes, goto clean
   
   // Build the Sprite
   ldx #$00              // init x
 build:
-  lda SPRITE_BUG, x           // load data at x
+  lda SPRITE_BUG, x     // load data at x
   sta SPRITE_0_DATA,x   // write into sprite data at x
   inx                   // increment x
-  cpx #$3F              // is x <= 63?
+  cpx #$7F              // is x <= 127?
   bne build             // if yes, goto build
   
   // Set Start Location of Sprite 0
@@ -73,13 +75,27 @@ build:
 
 
 
-
-
-
 main_loop:
     waitForFrame()
     drawJoyState()
 
+    inc _frameCount
+
+    lda _frameCount
+    and #$04
+    lsr
+    lsr
+    adc #$0d
+    sta SPRITE_0_POINTER
+
+/*
+    inc SPRITE_0_POINTER
+    lda SPRITE_0_POINTER
+    cmp #$0F
+    bne !+
+    lda #$0D              // using block 13 for sprite0   
+!:
+*/
     lda JOY1_STATE
     and #JOY_RIGHT
     bne !++
