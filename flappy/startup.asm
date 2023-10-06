@@ -1,9 +1,10 @@
 BasicUpstart2(startup)
 //    *=$4000 "Main Program"
 
-#import "data.asm"
+#import "const.asm"
 #import "input.asm"
 #import "main.asm"
+#import "sprites.asm"
 
 startup:
     sei        // disable maskable IRQs
