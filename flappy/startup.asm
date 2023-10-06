@@ -75,7 +75,6 @@ irq:
 !irq:               
 
     // my irq
-    readJoyState()
 
 !irq:
 

@@ -1,11 +1,8 @@
 main:
     waitForFrame()
+    drawJoyState()
     inc $d020
     jmp main
-
-
-
-
 
 
 .macro waitForFrame() {
