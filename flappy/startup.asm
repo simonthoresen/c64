@@ -1,6 +1,8 @@
 BasicUpstart2(startup)
 //    *=$4000 "Main Program"
 
+#import "data.asm"
+#import "input.asm"
 #import "main.asm"
 
 startup:
@@ -73,6 +75,7 @@ irq:
 !irq:               
 
     // my irq
+    readJoyState()
 
 !irq:
 
