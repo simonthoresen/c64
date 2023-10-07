@@ -8,7 +8,7 @@ main:
     sta ADR_SPRITE_ENABLE // enable sprite 0, %0000 0001
 
     lda #BLACK
-    sta ADR_SPRITE_0_COLOR
+    sta ADR_ADR_SPR0_COLOR
 
     ldx #$00
 build_sprite:
@@ -29,8 +29,8 @@ build_sprite:
   lda #%00000001              // enable...
   sta ADR_SPRITE_ENABLE             // ...Sprite 0 => %0000 0001 (all sprites off except Sprite 0)
   
-  lda #COLOR_BLACK      // load black color code into A
-  sta SPRITE_0_COLOR    // make Sprite0 completely black
+  lda #COL_BLACK      // load black color code into A
+  sta ADR_SPR0_COLOR    // make Sprite0 completely black
   
   // Reset Sprite Data
   ldx #$00    // init x
@@ -54,8 +54,8 @@ build:
   // Set Start Location of Sprite 0
   ldx #$64                  // initial x position = 100
   ldy #$46                  // initial y position =  70
-  stx SPRITE_0_X_POSITION   // move sprite 0 to x position
-  sty SPRITE_0_Y_POSITION   // move sprite 0 to y position
+  stx ADR_SPR0_POSX   // move sprite 0 to x position
+  sty ADR_SPR0_POSY   // move sprite 0 to y position
 
 
 
@@ -66,8 +66,8 @@ build:
     sta ADR_SPRITE_MCOL0
     lda #$02 // sprite multicolor 2
     sta ADR_SPRITE_MCOL1
-    lda #GREEN
-    sta SPRITE_0_COLOR
+    lda #COL_GREEN
+    sta ADR_SPR0_COLOR
 
 main_loop:
     wait_for_frame()
@@ -91,17 +91,17 @@ main_loop:
 !:
 */
 
-    lda #JOY_RIGHT
-    bit JOY1_STATE
+    lda #MSK_JOY_RIGHT
+    bit ADR_JOY1_STATE
     bne !++
-    lda SPRITE_0_X_POSITION
+    lda ADR_SPR0_POSX
     cmp #$ff
     bne !+
     lda #$01
-    ora ADR_SPRITE_UPPER_X
-    sta ADR_SPRITE_UPPER_X
+    ora ADR_SPRITE_POSX_BIT9
+    sta ADR_SPRITE_POSX_BIT9
 !:
-    inc SPRITE_0_X_POSITION
+    inc ADR_SPR0_POSX
 !:
     inc $d020
     jmp main_loop

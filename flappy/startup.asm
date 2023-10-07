@@ -4,6 +4,7 @@ BasicUpstart2(startup)
 #import "const.asm"
 #import "data.asm"
 #import "input.asm"
+#import "library.asm"
 #import "main.asm"
 #import "vars.asm"
 
