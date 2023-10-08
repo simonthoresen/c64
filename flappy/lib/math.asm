@@ -1,3 +1,18 @@
+.macro add_signed8(src8, dst16) {
+	clc
+ 	lda src8
+	adc dst16
+ 	sta dst16
+ 
+	// sign-extend the high byte
+	lda src8
+	and #$80	// extract the sign bit
+	beq !+		// if zero, add #$00 (+carry)
+  	lda #$ff	// else, add $ff (+ carry)
+!: 	adc dst16+1
+ 	sta dst16+1
+}
+
 .macro inc16(adr) {
 	inc adr
 	bne !+

@@ -17,8 +17,8 @@ main:
     sta ADR_SPR0_COLOR
 
 
-    sta_val16($0010, _player_pos_x)
-    lda #$46
+    sta_val16($00a0, _player_pos_x)
+    lda #$64
     sta _player_pos_y
     lda #$00
     sta _player_acc_x
@@ -26,23 +26,54 @@ main:
     sta _player_vel_x
     sta _player_vel_y
 
+    lda #$00
+    sta _slow_motion
+
+    clear_screen(ADR_SCREEN, $20)
 
 main_loop:
     wait_for_frame()
     inc _frame_count
 
-    draw_joy_state()
+    dec _slow_motion
+    lda _slow_motion
+    cmp #$ff
+    bne main_loop
+    lda #$00
+    sta _slow_motion
 
     read_player_acc()
     calc_player_vel()
     update_player_pos()
 
+    //draw_joy_state()
+    //draw_mem(_player_pos_x, 0)
+    //draw_mem(_player_vel_x, 3)
+    //draw_mem(_player_acc_x, 6)  
+
     anim_player_spr()
     draw_player_spr()
 
-    inc $d020
     jmp main_loop
 
+
+.macro draw_mem(src, pos) {
+    lda src
+    and #$80
+    cmp #$00
+    beq !+
+    lda #'-'
+    sta ADR_SCREEN+pos
+    jmp !++
+!:
+    lda #'+'
+    sta ADR_SCREEN+pos
+!:
+    lda src
+    clc
+    adc #'0'
+    sta ADR_SCREEN+pos+1
+}
 
 .macro draw_player_spr() {
     lda _player_pos_x
@@ -64,86 +95,112 @@ main_loop:
 }
 
 .macro anim_player_spr() {
+    lda _player_acc_x
+    cmp #$00
+    bne move
+
+stop:
+    ldx #$88
+    jmp end
+
+move:
     lda _frame_count
     and #%00001100
     lsr
     lsr
     adc #$80
-    sta ADR_SPR0_POINTER
+    tax
+
+    lda _player_acc_x
+    and #$80
+    cmp #$80
+    bne move_right
+
+move_left:
+    inx
+    inx
+    inx
+    inx
+
+move_right:
+
+end:
+    stx ADR_SPR0_POINTER
 }
 
 .macro update_player_pos() {
-    lda _player_vel_x
-    cmp #$00
-    beq move_done
-
-    and #%10000000
-    cmp #$00
-    bne move_left
-
-move_right:
-    lda _player_vel_x
-    and #%01111111
-    lsr 
-    lsr
-    sta ADR_ZPAGE_U0
-
-    clc
-    lda _player_pos_x
-    adc ADR_ZPAGE_U0
-    sta _player_pos_x
-
-    lda _player_pos_x+1
-    adc #$00
-    sta _player_pos_x+1
-    jmp move_done
-
-move_left:
-    lda _player_vel_x
-    and #%01111111
-    lsr
-    lsr
-    sta ADR_ZPAGE_U0
-
-    sec
-    lda _player_pos_x
-    sbc ADR_ZPAGE_U0
-    sta _player_pos_x
-
-    lda _player_pos_x+1
-    sbc #$00
-    sta _player_pos_x+1
-    // fall through
-
-move_done:
+    add_signed8(_player_vel_x, _player_pos_x)
 }
 
 .macro calc_player_vel() {
     lda _player_acc_x
+    cmp #$00
+    beq end
 
-
-    // todo: smoothen
-
+    lda _player_vel_x
+    clc
+    adc _player_acc_x
     sta _player_vel_x
+
+    and #$80
+    cmp #$80
+    beq cap_neg
+
+cap_pos:
+    lda _player_vel_x
+    cmp #$06
+    bcc end
+    lda #$06
+    sta _player_vel_x
+    jmp end
+
+cap_neg:
+    lda _player_vel_x
+    cmp #$fa
+    bcs end
+    lda #$fa
+    sta _player_vel_x
+
+end:
 }
 
 .macro read_player_acc() {
-    lda #$00
-    sta _player_acc_x
-
+    // check joystick for acc
     lda #MSK_JOY_RIGHT
     bit ADR_JOY1_STATE
     bne !+
-    lda #$04
+    lda #$01
     sta _player_acc_x
+    jmp end
 !:
-
     lda #MSK_JOY_LEFT
     bit ADR_JOY1_STATE
     bne !+
-    lda #$84
+    lda #$ff // -1
     sta _player_acc_x
+    jmp end
+!:    
+
+    // check velocity for need to slow
+    lda _player_vel_x
+    cmp #$00
+    bne !+
+    sta _player_acc_x
+    jmp end
 !:
+
+    // slow down
+    and #%1000000
+    cmp #$00
+    beq !+ // jmp if negative
+    lda #$01
+    sta _player_acc_x
+    jmp end
+!:
+    lda #$ff // -1 as signed byte
+    sta _player_acc_x
+
+end:
 }
 
 .macro wait_for_frame() {

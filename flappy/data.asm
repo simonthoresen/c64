@@ -1,9 +1,6 @@
 .const SPR_BEAR_MCOL0 = $00
 .const SPR_BEAR_MCOL1 = $01
 
-// 2-color sprites are 24x21 pixels
-*=$2000
-
 // sprite 0 / multicolor / color: $08
 SPR_BEAR_R0:
 .byte $00,$00,$00,$00,$11,$40,$00,$66
