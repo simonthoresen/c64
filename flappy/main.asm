@@ -1,26 +1,30 @@
+.filenamespace main
+
 main:
-    lda #$82 // point to address of sprite in 64 multiples
+    lda #$80 // point to address of sprite in 64 multiples
     sta ADR_SPR0_POINTER  
 
     lda #%00000001 
     sta ADR_SPRITE_ENABLE
     sta ADR_SPRITE_MCOL_ENABLE
 
-    lda #COL_BLACK
+    lda #SPR_BEAR_MCOL0
     sta ADR_SPRITE_MCOL0
-    lda #COL_WHITE
+    lda #SPR_BEAR_MCOL1
     sta ADR_SPRITE_MCOL1
 
-    lda #COL_LGREY
+    lda #COL_BROWN
     sta ADR_SPR0_COLOR
 
 
-    lda #$10
-    sta _player_pos_x
-    lda #$00
-    sta _player_pos_x+1
+    sta_val16($0010, _player_pos_x)
     lda #$46
-    sta ADR_SPR0_POSY
+    sta _player_pos_y
+    lda #$00
+    sta _player_acc_x
+    sta _player_acc_y
+    sta _player_vel_x
+    sta _player_vel_y
 
 
 main_loop:
@@ -30,10 +34,10 @@ main_loop:
     inc _frame_count
 
     lda _frame_count
-    and #$04
+    and #%00001100
     lsr
     lsr
-    adc #$82
+    adc #$80
     sta ADR_SPR0_POINTER
 
 
@@ -46,7 +50,7 @@ main_loop:
     lda #MSK_JOY_LEFT
     bit ADR_JOY1_STATE
     bne !+
-    sub_val16($0002, _player_pos_x)
+    sub_val8($02, _player_pos_x)
 !:
 
 
@@ -68,6 +72,8 @@ main_loop:
 !:
     sta ADR_SPRITE_POSX_BIT9
 
+    lda _player_pos_y
+    sta ADR_SPR0_POSY
 
     inc $d020
     jmp main_loop

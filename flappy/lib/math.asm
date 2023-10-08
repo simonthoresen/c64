@@ -14,7 +14,7 @@
 !:
 }
 
-.macro add_val8 (val8, dst16) {
+.macro add_val8(val8, dst16) {
 	clc
 	lda dst16
 	adc #val8
@@ -25,7 +25,7 @@
 	sta dst16+1
 }
 
-.macro add_val16 (val, dst) {
+.macro add_val16(val, dst) {
 	clc
 	lda dst
 	adc #<val
@@ -36,7 +36,7 @@
 	sta dst+1
 }
 
-.macro sub_val8 (val8, dst16) {
+.macro sub_val8(val8, dst16) {
 	sec
 	lda dst16
 	sbc #val8
@@ -47,7 +47,7 @@
 	sta dst16+1
 }
 
-.macro sub_val16 (val, dst) {
+.macro sub_val16(val, dst) {
 	sec
 	lda dst
 	sbc #<val
@@ -58,7 +58,7 @@
 	sta dst+1
 }
 
-.macro add_mem8 (src8, dst16) {
+.macro add_mem8(src8, dst16) {
 	clc
 	lda dst16
 	adc src8
@@ -69,7 +69,7 @@
 	sta dst16+1		
 }
 
-.macro add_mem16 (src, dst) {
+.macro add_mem16(src, dst) {
 	clc
 	lda dst
 	adc src
@@ -80,7 +80,7 @@
 	sta dst+1
 }
 
-.macro sub_mem8 (src8, dst16) {
+.macro sub_mem8(src8, dst16) {
 	sec
 	lda dst16
 	sbc src8
@@ -91,7 +91,7 @@
 	sta dst16+1	
 }
 
-.macro sub_mem16 (src, dst) {
+.macro sub_mem16(src, dst) {
 	sec
 	lda dst
 	sbc src

@@ -41,7 +41,7 @@ startup:
     // TODO: init music
 
     cli        // enable maskable interrupts again
-    jmp main
+    jmp main.main
 
 
 irq:
