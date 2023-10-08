@@ -40,13 +40,13 @@ main_loop:
     lda #MSK_JOY_RIGHT
     bit ADR_JOY1_STATE
     bne !+
-    inc16(_player_pos_x)
+    add_val8($02, _player_pos_x)
 !:
 
     lda #MSK_JOY_LEFT
     bit ADR_JOY1_STATE
     bne !+
-    dec16(_player_pos_x)
+    sub_val16($0002, _player_pos_x)
 !:
 
 
