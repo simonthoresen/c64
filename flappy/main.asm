@@ -75,22 +75,52 @@ main_loop:
 .macro update_player_pos() {
     lda _player_vel_x
     cmp #$00
-    beq end
+    beq move_done
 
     and #%10000000
     cmp #$00
-    bne neg
-pos:
-    add_val8($02, _player_pos_x)
-    jmp end
-neg:
-    sub_val8($02, _player_pos_x)
+    bne move_left
+
+move_right:
+    lda _player_vel_x
+    and #%01111111
+    lsr 
+    lsr
+    sta ADR_ZPAGE_U0
+
+    clc
+    lda _player_pos_x
+    adc ADR_ZPAGE_U0
+    sta _player_pos_x
+
+    lda _player_pos_x+1
+    adc #$00
+    sta _player_pos_x+1
+    jmp move_done
+
+move_left:
+    lda _player_vel_x
+    and #%01111111
+    lsr
+    lsr
+    sta ADR_ZPAGE_U0
+
+    sec
+    lda _player_pos_x
+    sbc ADR_ZPAGE_U0
+    sta _player_pos_x
+
+    lda _player_pos_x+1
+    sbc #$00
+    sta _player_pos_x+1
     // fall through
-end:
+
+move_done:
 }
 
 .macro calc_player_vel() {
     lda _player_acc_x
+
 
     // todo: smoothen
 
@@ -104,14 +134,14 @@ end:
     lda #MSK_JOY_RIGHT
     bit ADR_JOY1_STATE
     bne !+
-    lda #$01
+    lda #$04
     sta _player_acc_x
 !:
 
     lda #MSK_JOY_LEFT
     bit ADR_JOY1_STATE
     bne !+
-    lda #$81
+    lda #$84
     sta _player_acc_x
 !:
 }
