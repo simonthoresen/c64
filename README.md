@@ -9,3 +9,6 @@ petscii: https://sta.c64.org/cbm64scr.html
 https://www.c64-wiki.com/wiki/Indirect-indexed_addressing
 
 spritemate: https://www.awsm.de/spritemate/
+
+math: https://codebase64.org/doku.php?id=base:6502_6510_maths
+math: https://github.com/c64lib/common/blob/master/lib/math.asm

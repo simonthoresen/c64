@@ -1,10 +1,9 @@
 BasicUpstart2(startup)
 //    *=$4000 "Main Program"
 
-#import "const.asm"
 #import "data.asm"
 #import "input.asm"
-#import "library.asm"
+#import "lib/lib.asm"
 #import "main.asm"
 #import "vars.asm"
 
