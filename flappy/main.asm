@@ -15,7 +15,7 @@ main:
     sta ADR_SPR0_COLOR
 
 
-    lda #$00
+    lda #$10
     sta _player_pos_x
     lda #$00
     sta _player_pos_x+1
@@ -57,13 +57,9 @@ main_loop:
     lda _player_pos_x
     sta ADR_SPR0_POSX
 
-/*
-    lda _player_pos_x+1
-    cmp $00
-    beq !+*/
     lda ADR_SPRITE_POSX_BIT9
     ldx _player_pos_x+1
-    cpx $00
+    cpx #$00
     beq !+
     ora #%00000001
     jmp !++
@@ -71,12 +67,6 @@ main_loop:
     and #%11111110
 !:
     sta ADR_SPRITE_POSX_BIT9
-/*    jmp !++
-!:
-    lda #%11111110
-    and ADR_SPRITE_POSX_BIT9
-    sta ADR_SPRITE_POSX_BIT9*/
-!:
 
 
     inc $d020
