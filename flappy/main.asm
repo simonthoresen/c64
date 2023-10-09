@@ -73,40 +73,7 @@ main_loop:
     print_byte(_player_acc_y, 50)      
 }
 
-.macro print_word(src, pos) {
-    print_byte(src+1, pos)
-    print_byte(src, pos+2)
-}
 
-.macro print_byte(src, pos) {
-    lda src
-    pha
-    lsr
-    lsr
-    lsr
-    lsr
-    print_nibble(pos)
-    
-    pla
-    and #$0f
-    print_nibble(pos+1)
-}
-
-.macro print_nibble(pos) {
-    cmp #$0a
-    bcs letter
-
-digit:
-    ora #$30
-    jmp print
-
-letter:
-    clc
-    sbc #$08
-
-print:
-    sta ADR_SCREEN+pos
-}
 
 .macro draw_player_spr() {
     lda _player_pos_x
