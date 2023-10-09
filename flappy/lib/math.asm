@@ -4,7 +4,6 @@
 // src1 = src2 : Carry =  SET   Zero =  SET   Neg = CLEAR
 // src1 > src2 : Carry =  SET   Zero = CLEAR  Neg = CLEAR
 // src1 < src2 : Carry = CLEAR  Zero = CLEAR  Neg =  SET
-//
 .macro cmp_mem16(src1, src2) {
     lda src1
     sec
