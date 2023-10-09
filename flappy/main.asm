@@ -1,10 +1,6 @@
 
 
 main:
-    lda #$80 // point to address of sprite in 64 multiples
-             // this is $2000 (hardcoded in data.asm) / 64
-    sta ADR_SPR0_POINTER  
-
     lda #%00000001 
     sta ADR_SPRITE_ENABLE
     sta ADR_SPRITE_MCOL_ENABLE
@@ -122,7 +118,7 @@ main_loop:
     lda (ADR_ZPAGE_U0),y
 !:
     clc
-    adc #$80 // ADR_SPRITES / 64
+    adc #ADR_DATA_64
     sta ADR_SPR0_POINTER
 
     print_word(ADR_ZPAGE_U0, 120)

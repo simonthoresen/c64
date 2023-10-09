@@ -1,6 +1,8 @@
 BasicUpstart2(startup)
 
-*=$2000 "Data"
+.const ADR_DATA = $2000
+.const ADR_DATA_64 = ADR_DATA/64
+*=ADR_DATA "Data"
 #import "data.asm"
 
 *=$4000 "Main Program"
