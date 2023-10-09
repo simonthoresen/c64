@@ -5,7 +5,7 @@
 // src1 > src2 : Carry =  SET   Zero = CLEAR  Neg = CLEAR
 // src1 < src2 : Carry = CLEAR  Zero = CLEAR  Neg =  SET
 //
-.macro cmp16(src1, src2) {
+.macro cmp_mem16(src1, src2) {
     lda src1
     sec
     sbc src2
@@ -21,6 +21,24 @@
     and ADR_ZPAGE_U0
     pha
     plp
+}
+
+.macro cmp_val16(src, val) {
+    lda src
+    sec
+    sbc #<val
+    php
+    lda src+1
+    sbc #>val
+    php
+    pla
+    sta ADR_ZPAGE_U0
+    pla
+    and #%00000010
+    ora #%11111101
+    and ADR_ZPAGE_U0
+    pha
+    plp	
 }
 
 .macro add_signed8(src8, dst16) {

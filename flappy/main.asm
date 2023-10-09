@@ -60,21 +60,39 @@ main_loop:
     sta ADR_SCREEN
     lda #':'
     sta ADR_SCREEN+1
-    draw_mem(_player_pos_x+1, 2)
-    draw_mem(_player_pos_x, 4)
-    draw_mem(_player_vel_x, 7)
-    draw_mem(_player_acc_x, 10)  
+    print_word(_player_pos_x, 2)
+    print_byte(_player_vel_x, 7)
+    print_byte(_player_acc_x, 10)  
 
     lda #'y'
     sta ADR_SCREEN+40
     lda #':'
     sta ADR_SCREEN+41
-    draw_mem(_player_pos_y, 44)
-    draw_mem(_player_vel_y, 47)
-    draw_mem(_player_acc_y, 50)      
+    print_byte(_player_pos_y, 44)
+    print_byte(_player_vel_y, 47)
+    print_byte(_player_acc_y, 50)      
 }
 
-.macro draw_acc4(pos) {
+.macro print_word(src, pos) {
+    print_byte(src+1, pos)
+    print_byte(src, pos+2)
+}
+
+.macro print_byte(src, pos) {
+    lda src
+    pha
+    lsr
+    lsr
+    lsr
+    lsr
+    print_nibble(pos)
+    
+    pla
+    and #$0f
+    print_nibble(pos+1)
+}
+
+.macro print_nibble(pos) {
     cmp #$0a
     bcs letter
 
@@ -88,20 +106,6 @@ letter:
 
 print:
     sta ADR_SCREEN+pos
-}
-
-.macro draw_mem(src, pos) {
-    lda src
-    pha
-    lsr
-    lsr
-    lsr
-    lsr
-    draw_acc4(pos)
-    
-    pla
-    and #$0f
-    draw_acc4(pos+1)
 }
 
 .macro draw_player_spr() {
@@ -157,25 +161,25 @@ end:
     stx ADR_SPR0_POINTER
 }
 
-_sprite_pos_x_min: .word $0018
-_sprite_pos_x_max: .word $0140
+.label SPRITE_POS_X_MIN = $0018
+.label SPRITE_POS_X_MAX = $0140
 
 .macro update_player_pos() {
     add_signed8(_player_vel_x, _player_pos_x)
 
-    cmp16(_player_pos_x, _sprite_pos_x_min)
+    cmp_val16(_player_pos_x, SPRITE_POS_X_MIN)
     bpl !+
-    lda _sprite_pos_x_min
+    lda #<SPRITE_POS_X_MIN
     sta _player_pos_x
-    lda _sprite_pos_x_min+1
+    lda #>SPRITE_POS_X_MIN
     sta _player_pos_x+1
     jmp end
 !:
-    cmp16(_player_pos_x, _sprite_pos_x_max)
+    cmp_val16(_player_pos_x, SPRITE_POS_X_MAX)
     bmi !+
-    lda _sprite_pos_x_max
+    lda #<SPRITE_POS_X_MAX
     sta _player_pos_x
-    lda _sprite_pos_x_max+1
+    lda #>SPRITE_POS_X_MAX
     sta _player_pos_x+1
     jmp end
 !:
