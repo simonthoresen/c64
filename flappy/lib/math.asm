@@ -1,3 +1,18 @@
+.macro cpy_val16(val, dst) {
+	lda #<val
+	sta dst
+	lda #>val
+	sta dst+1
+}
+
+.macro cpy_mem16(src, dst) {
+	lda src
+	sta dst
+	lda src+1
+	sta dst+1
+}
+
+
 // Compares 16 bit values in given memory addresses.
 //
 //                 (BCC/BCS)     (BEQ/BNE)     (BMI/BPL)

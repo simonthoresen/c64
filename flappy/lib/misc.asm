@@ -20,9 +20,3 @@
 	bne !-
 }
 
-.macro sta_val16(val, dst) {
-	lda #<val
-	sta dst
-	lda #>val
-	sta dst+1
-}

@@ -1,5 +1,3 @@
-.filenamespace main
-
 main:
     lda #$80 // point to address of sprite in 64 multiples
     sta ADR_SPR0_POINTER  
@@ -17,7 +15,7 @@ main:
     sta ADR_SPR0_COLOR
 
 
-    sta_val16($0018, _player_pos_x)
+    cpy_val16($0018, _player_pos_x)
     lda #$32
     sta _player_pos_y
     lda #$00
@@ -133,18 +131,12 @@ end:
 
     cmp_val16(_player_pos_x, SPRITE_POS_X_MIN)
     bpl !+
-    lda #<SPRITE_POS_X_MIN
-    sta _player_pos_x
-    lda #>SPRITE_POS_X_MIN
-    sta _player_pos_x+1
+    cpy_val16(SPRITE_POS_X_MIN, _player_pos_x)
     jmp end
 !:
     cmp_val16(_player_pos_x, SPRITE_POS_X_MAX)
     bmi !+
-    lda #<SPRITE_POS_X_MAX
-    sta _player_pos_x
-    lda #>SPRITE_POS_X_MAX
-    sta _player_pos_x+1
+    cpy_val16(SPRITE_POS_X_MAX, _player_pos_x)
     jmp end
 !:
 
