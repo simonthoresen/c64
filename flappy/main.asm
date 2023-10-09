@@ -17,8 +17,8 @@ main:
     sta ADR_SPR0_COLOR
 
 
-    sta_val16($00a0, _player_pos_x)
-    lda #$64
+    sta_val16($0018, _player_pos_x)
+    lda #$32
     sta _player_pos_y
     lda #$00
     sta _player_acc_x
@@ -47,9 +47,7 @@ main_loop:
     update_player_pos()
 
     //draw_joy_state()
-    //draw_mem(_player_pos_x, 0)
-    //draw_mem(_player_vel_x, 3)
-    //draw_mem(_player_acc_x, 6)  
+    draw_player_state()
 
     anim_player_spr()
     draw_player_spr()
@@ -57,22 +55,53 @@ main_loop:
     jmp main_loop
 
 
+.macro draw_player_state() {
+    lda #'x'
+    sta ADR_SCREEN
+    lda #':'
+    sta ADR_SCREEN+1
+    draw_mem(_player_pos_x+1, 2)
+    draw_mem(_player_pos_x, 4)
+    draw_mem(_player_vel_x, 7)
+    draw_mem(_player_acc_x, 10)  
+
+    lda #'y'
+    sta ADR_SCREEN+40
+    lda #':'
+    sta ADR_SCREEN+41
+    draw_mem(_player_pos_y, 44)
+    draw_mem(_player_vel_y, 47)
+    draw_mem(_player_acc_y, 50)      
+}
+
+.macro draw_acc4(pos) {
+    cmp #$0a
+    bcs letter
+
+digit:
+    ora #$30
+    jmp print
+
+letter:
+    clc
+    sbc #$08
+
+print:
+    sta ADR_SCREEN+pos
+}
+
 .macro draw_mem(src, pos) {
     lda src
-    and #$80
-    cmp #$00
-    beq !+
-    lda #'-'
-    sta ADR_SCREEN+pos
-    jmp !++
-!:
-    lda #'+'
-    sta ADR_SCREEN+pos
-!:
-    lda src
-    clc
-    adc #'0'
-    sta ADR_SCREEN+pos+1
+    pha
+    lsr
+    lsr
+    lsr
+    lsr
+    draw_acc4(pos)
+    
+    pla
+    and #$0f
+    draw_acc4(pos+1)
 }
 
 .macro draw_player_spr() {
@@ -130,6 +159,16 @@ end:
 
 .macro update_player_pos() {
     add_signed8(_player_vel_x, _player_pos_x)
+/*
+    lda _player_pos_x+1
+    and #$80
+    cmp #$80
+    bne end
+    lda $00
+    sta _player_pos_x
+    sta _player_pos_x+1
+*/
+end:    
 }
 
 .macro calc_player_vel() {
