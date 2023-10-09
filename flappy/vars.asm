@@ -1,5 +1,7 @@
 .label SPRITE_POS_X_MIN = $0018
 .label SPRITE_POS_X_MAX = $0140
+.label SPRITE_POS_Y_MIN = $32
+.label SPRITE_POS_Y_MAX = $90
 
 
 _frame_count: 	.byte $00

@@ -19,7 +19,7 @@ main:
 
 
     cpy_val16($0018, _player_pos_x)
-    lda #$32
+    lda #SPRITE_POS_Y_MIN
     sta _player_pos_y
     lda #$00
     sta _player_acc_x
@@ -49,6 +49,7 @@ main_loop:
     inc _frame_count
 
     read_player_acc()
+    calc_player_acc()
     calc_player_vel()
     update_player_pos()
 
@@ -132,6 +133,14 @@ main_loop:
 .macro update_player_pos() {
     add_signed8(_player_vel_x, _player_pos_x)
 
+    /*
+    clc
+    lda _player_pos_y
+    adc _player_vel_y
+    sta _player_pos_y
+    // todo: cap y position
+    */
+
     cmp_val16(_player_pos_x, SPRITE_POS_X_MIN)
     bpl !+
     cpy_val16(SPRITE_POS_X_MIN, _player_pos_x)
@@ -147,33 +156,38 @@ end:
 }
 
 .macro calc_player_vel() {
-    lda _player_acc_x
+    calc_vel(_player_acc_x, _player_vel_x, 4)
+    calc_vel(_player_acc_y, _player_vel_y, 6)
+}
+
+.macro calc_vel(acc, vel, cap) {
+    lda acc
     cmp #$00
     beq end
 
-    lda _player_vel_x
+    lda vel
     clc
-    adc _player_acc_x
-    sta _player_vel_x
+    adc acc
+    sta vel
 
     and #$80
     cmp #$80
     beq cap_neg
 
 cap_pos:
-    lda _player_vel_x
-    cmp #$06
+    lda vel
+    cmp #$00+cap
     bcc end
-    lda #$06
-    sta _player_vel_x
+    lda #$00+cap
+    sta vel
     jmp end
 
 cap_neg:
-    lda _player_vel_x
-    cmp #$fa
+    lda vel
+    cmp #$00-cap
     bcs end
-    lda #$fa
-    sta _player_vel_x
+    lda #$00-cap
+    sta vel
 
 end:
 }
@@ -190,6 +204,16 @@ end:
     lda #$00
     sta dst_frame
 !:
+}
+
+.macro calc_player_acc() {
+    lda _player_pos_y
+    cmp #SPRITE_POS_Y_MAX
+    bcs end
+    lda #$01
+    sta _player_acc_y
+
+end:
 }
 
 .macro read_player_acc() {
