@@ -27,9 +27,9 @@ main:
     sta _player_vel_x
     sta _player_vel_y
 
-    cpy_val16(_anim_bear_walk_left, _player_anim_ptr)
-    lda #$00
-    sta _player_frame
+    set_anim(_anim_bear_stand, 
+             _player_anim_ptr, 
+             _player_frame)
 
     lda #$00
     sta _slow_motion
