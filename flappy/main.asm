@@ -19,7 +19,7 @@ main:
 
 
     cpy_val16($0018, _player_pos_x)
-    lda #SPRITE_POS_Y_MIN
+    lda #SPRITE_POS_Y_MAX
     sta _player_pos_y
     lda #$00
     sta _player_acc_x
@@ -133,31 +133,36 @@ main_loop:
 .macro update_player_pos() {
     add_signed8(_player_vel_x, _player_pos_x)
 
-    /*
-    clc
-    lda _player_pos_y
-    adc _player_vel_y
-    sta _player_pos_y
-    // todo: cap y position
-    */
-
     cmp_val16(_player_pos_x, SPRITE_POS_X_MIN)
     bpl !+
     cpy_val16(SPRITE_POS_X_MIN, _player_pos_x)
-    jmp end
+    jmp !++
 !:
     cmp_val16(_player_pos_x, SPRITE_POS_X_MAX)
     bmi !+
     cpy_val16(SPRITE_POS_X_MAX, _player_pos_x)
-    jmp end
 !:
 
-end:    
+    lda _player_pos_y
+    clc
+    adc _player_vel_y
+    cmp #SPRITE_POS_Y_MIN
+    bcs !+
+    lda #SPRITE_POS_Y_MIN
+    jmp !++
+!:
+    cmp #SPRITE_POS_Y_MAX
+    bcc !+
+    lda #$00
+    sta _player_vel_y
+    lda #SPRITE_POS_Y_MAX
+!:
+    sta _player_pos_y
 }
 
 .macro calc_player_vel() {
     calc_vel(_player_acc_x, _player_vel_x, 4)
-    calc_vel(_player_acc_y, _player_vel_y, 6)
+    calc_vel(_player_acc_y, _player_vel_y, 8)
 }
 
 .macro calc_vel(acc, vel, cap) {
@@ -209,15 +214,23 @@ end:
 .macro calc_player_acc() {
     lda _player_pos_y
     cmp #SPRITE_POS_Y_MAX
-    bcs end
+    bcs !+
     lda #$01
+    jmp !++
+!:
+    lda #$00
+!:
     sta _player_acc_y
-
-end:
 }
 
 .macro read_player_acc() {
-    // check joystick for acc
+    lda #MSK_JOY_FIRE
+    bit ADR_JOY1_STATE
+    bne !+
+    lda #$fa
+    sta _player_vel_y
+!:
+
     lda #MSK_JOY_RIGHT
     bit ADR_JOY1_STATE
     bne !+
