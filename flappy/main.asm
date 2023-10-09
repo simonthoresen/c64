@@ -29,7 +29,7 @@ main:
     lda #$00
     sta _slow_motion
 
-    clear_screen(ADR_SCREEN, $20)
+    clear_screen($20)
 
 main_loop:
     wait_for_frame()
@@ -46,8 +46,8 @@ main_loop:
     calc_player_vel()
     update_player_pos()
 
-    //draw_joy_state()
-    draw_player_state()
+    //debug_joy_state()
+    debug_player_state()
 
     anim_player_spr()
     draw_player_spr()
@@ -55,7 +55,7 @@ main_loop:
     jmp main_loop
 
 
-.macro draw_player_state() {
+.macro debug_player_state() {
     lda #'x'
     sta ADR_SCREEN
     lda #':'
@@ -160,9 +160,6 @@ move_right:
 end:
     stx ADR_SPR0_POINTER
 }
-
-.label SPRITE_POS_X_MIN = $0018
-.label SPRITE_POS_X_MAX = $0140
 
 .macro update_player_pos() {
     add_signed8(_player_vel_x, _player_pos_x)

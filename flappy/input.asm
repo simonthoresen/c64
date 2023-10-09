@@ -1,4 +1,4 @@
-.macro draw_joy_state() {
+.macro debug_joy_state() {
     inc $0425
     lda #'u'
     sta $0426

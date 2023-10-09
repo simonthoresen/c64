@@ -8,14 +8,14 @@
 	sta ADR_BACKGROUND_COL
 }
 
-.macro clear_screen(screen, clearByte) {
+.macro clear_screen(clearByte) {
 	lda #clearByte
 	ldx #$00
 !:
-	sta screen, x
-	sta screen + $0100, x
-	sta screen + $0200, x
-	sta screen + $0300, x
+	sta ADR_SCREEN, x
+	sta ADR_SCREEN + $0100, x
+	sta ADR_SCREEN + $0200, x
+	sta ADR_SCREEN + $0300, x
 	inx
 	bne !-
 }

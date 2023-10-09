@@ -1,3 +1,7 @@
+.label SPRITE_POS_X_MIN = $0018
+.label SPRITE_POS_X_MAX = $0140
+
+
 _frame_count: 	.byte $00
 _slow_motion:	.byte $00
 
