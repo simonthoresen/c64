@@ -1,5 +1,8 @@
+
+
 main:
     lda #$80 // point to address of sprite in 64 multiples
+             // this is $2000 (hardcoded in data.asm) / 64
     sta ADR_SPR0_POINTER  
 
     lda #%00000001 
@@ -24,6 +27,10 @@ main:
     sta _player_vel_x
     sta _player_vel_y
 
+    cpy_val16(_anim_bear_walk_left, _player_anim_ptr)
+    lda #$00
+    sta _player_frame
+
     lda #$00
     sta _slow_motion
 
@@ -31,7 +38,6 @@ main:
 
 main_loop:
     wait_for_frame()
-    inc _frame_count
 
     dec _slow_motion
     lda _slow_motion
@@ -39,6 +45,8 @@ main_loop:
     bne main_loop
     lda #$00
     sta _slow_motion
+
+    inc _frame_count
 
     read_player_acc()
     calc_player_vel()
@@ -93,37 +101,32 @@ main_loop:
 }
 
 .macro anim_player_spr() {
-    lda _player_acc_x
-    cmp #$00
-    bne move
+    lda _player_anim_ptr
+    sta ADR_ZPAGE_U0
+    lda _player_anim_ptr+1
+    sta ADR_ZPAGE_U1
 
-stop:
-    ldx #$88
-    jmp end
-
-move:
     lda _frame_count
-    and #%00001100
-    lsr
-    lsr
-    adc #$80
-    tax
+    and #$03
+    cmp #$03
+    bne !+
+    inc _player_frame
+!:
+    ldy _player_frame
+    lda (ADR_ZPAGE_U0),y
+    cmp #$ff
+    bne !+
+    ldy #$00
+    sty _player_frame
+    lda (ADR_ZPAGE_U0),y
+!:
+    clc
+    adc #$80 // ADR_SPRITES / 64
+    sta ADR_SPR0_POINTER
 
-    lda _player_acc_x
-    and #$80
-    cmp #$80
-    bne move_right
-
-move_left:
-    inx
-    inx
-    inx
-    inx
-
-move_right:
-
-end:
-    stx ADR_SPR0_POINTER
+    print_word(ADR_ZPAGE_U0, 120)
+    print_byte(ADR_SPR0_POINTER, 125)
+    print_byte(_player_frame, 160)    
 }
 
 .macro update_player_pos() {
@@ -142,7 +145,6 @@ end:
 
 end:    
 }
-
 
 .macro calc_player_vel() {
     lda _player_acc_x
@@ -176,6 +178,20 @@ cap_neg:
 end:
 }
 
+.macro set_anim(anim_ptr, dst_anim, dst_frame) {
+    lda #<anim_ptr
+    cmp dst_anim
+    bne !+
+    lda #>anim_ptr
+    cmp dst_anim+1
+    beq !++
+!:
+    cpy_val16(anim_ptr, dst_anim)
+    lda #$00
+    sta dst_frame
+!:
+}
+
 .macro read_player_acc() {
     // check joystick for acc
     lda #MSK_JOY_RIGHT
@@ -183,6 +199,9 @@ end:
     bne !+
     lda #$01
     sta _player_acc_x
+    set_anim(_anim_bear_walk_right, 
+             _player_anim_ptr, 
+             _player_frame)
     jmp end
 !:
     lda #MSK_JOY_LEFT
@@ -190,8 +209,14 @@ end:
     bne !+
     lda #$ff // -1
     sta _player_acc_x
+    set_anim(_anim_bear_walk_left, 
+             _player_anim_ptr, 
+             _player_frame)
     jmp end
 !:    
+    set_anim(_anim_bear_stand, 
+             _player_anim_ptr, 
+             _player_frame)
 
     // check velocity for need to slow
     lda _player_vel_x

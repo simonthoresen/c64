@@ -1,7 +1,6 @@
 .const SPR_BEAR_MCOL0 = $00
 .const SPR_BEAR_MCOL1 = $01
 
-// sprite 0 / multicolor / color: $08
 SPR_BEAR_R0:
 .byte $00,$00,$00,$00,$11,$40,$00,$66
 .byte $40,$00,$69,$40,$00,$5a,$90,$00
@@ -12,7 +11,6 @@ SPR_BEAR_R0:
 .byte $1a,$99,$00,$1a,$66,$40,$1a,$56
 .byte $90,$1a,$46,$90,$1a,$91,$a4,$88
 
-// sprite 1 / multicolor / color: $08
 SPR_BEAR_R1:
 .byte $00,$00,$00,$00,$11,$40,$00,$66
 .byte $40,$00,$69,$40,$00,$5a,$90,$00
@@ -23,7 +21,6 @@ SPR_BEAR_R1:
 .byte $06,$66,$40,$06,$9a,$40,$06,$9a
 .byte $40,$06,$9a,$40,$06,$a6,$90,$88
 
-// sprite 2 / multicolor / color: $08
 SPR_BEAR_R2:
 .byte $00,$11,$40,$00,$66,$40,$00,$69
 .byte $40,$00,$5a,$90,$00,$6a,$e0,$00
@@ -34,7 +31,6 @@ SPR_BEAR_R2:
 .byte $01,$69,$00,$01,$a9,$00,$01,$69
 .byte $00,$06,$6a,$40,$06,$6a,$40,$88
 
-// sprite 3 / multicolor / color: $08
 SPR_BEAR_R3:
 .byte $00,$00,$00,$00,$04,$50,$00,$19
 .byte $a0,$00,$1a,$50,$00,$16,$94,$00
@@ -45,7 +41,6 @@ SPR_BEAR_R3:
 .byte $01,$6a,$44,$16,$9a,$90,$1a,$9a
 .byte $a4,$1a,$46,$a4,$06,$91,$a4,$88
 
-// sprite 4 / multicolor / color: $08
 SPR_BEAR_L0:
 .byte $00,$00,$00,$01,$44,$00,$01,$99
 .byte $00,$01,$69,$00,$06,$a5,$00,$0b
@@ -56,7 +51,6 @@ SPR_BEAR_L0:
 .byte $00,$66,$a4,$01,$99,$a4,$06,$95
 .byte $a4,$06,$91,$a4,$1a,$46,$a4,$88
 
-// sprite 5 / multicolor / color: $08
 SPR_BEAR_L1:
 .byte $00,$00,$00,$01,$44,$00,$01,$99
 .byte $00,$01,$69,$00,$06,$a5,$00,$0b
@@ -67,7 +61,6 @@ SPR_BEAR_L1:
 .byte $01,$99,$90,$01,$a6,$90,$01,$a6
 .byte $90,$01,$a6,$90,$06,$9a,$90,$88
 
-// sprite 6 / multicolor / color: $08
 SPR_BEAR_L2:
 .byte $01,$44,$00,$01,$99,$00,$01,$69
 .byte $00,$06,$a5,$00,$0b,$a9,$00,$0d
@@ -78,7 +71,6 @@ SPR_BEAR_L2:
 .byte $00,$69,$40,$00,$6a,$40,$00,$69
 .byte $40,$01,$a9,$90,$01,$a9,$90,$88
 
-// sprite 7 / multicolor / color: $08
 SPR_BEAR_L3:
 .byte $00,$00,$00,$05,$10,$00,$0a,$64
 .byte $00,$05,$a4,$00,$16,$94,$00,$2e
@@ -89,7 +81,6 @@ SPR_BEAR_L3:
 .byte $11,$a9,$40,$06,$a6,$94,$1a,$a6
 .byte $a4,$1a,$91,$a4,$1a,$46,$90,$88
 
-// sprite 8 / multicolor / color: $08
 SPR_BEAR_S0:
 .byte $00,$00,$00,$05,$01,$40,$1a,$56
 .byte $90,$19,$a9,$90,$06,$aa,$40,$06
@@ -99,3 +90,15 @@ SPR_BEAR_S0:
 .byte $aa,$64,$69,$a9,$a4,$69,$a9,$a4
 .byte $19,$a9,$90,$06,$9a,$40,$1a,$9a
 .byte $90,$1a,$9a,$90,$1a,$9a,$90,$88
+
+
+_anim_bear_walk_right:  
+	.byte $00, $01, $02, $03, $02, $01, $ff
+
+_anim_bear_walk_left: 
+	.byte $04, $05, $06, $07, $06, $05, $ff
+
+_anim_bear_stand:
+	.byte $08, $ff 
+
+
