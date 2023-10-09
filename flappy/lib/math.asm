@@ -1,3 +1,28 @@
+// Compares 16 bit values in given memory addresses.
+//
+//                 (BCC/BCS)     (BEQ/BNE)     (BMI/BPL)
+// src1 = src2 : Carry =  SET   Zero =  SET   Neg = CLEAR
+// src1 > src2 : Carry =  SET   Zero = CLEAR  Neg = CLEAR
+// src1 < src2 : Carry = CLEAR  Zero = CLEAR  Neg =  SET
+//
+.macro cmp16(src1, src2) {
+    lda src1
+    sec
+    sbc src2
+    php
+    lda src1+1
+    sbc src2+1
+    php
+    pla
+    sta ADR_ZPAGE_U0
+    pla
+    and #%00000010
+    ora #%11111101
+    and ADR_ZPAGE_U0
+    pha
+    plp
+}
+
 .macro add_signed8(src8, dst16) {
 	clc
  	lda src8

@@ -157,19 +157,32 @@ end:
     stx ADR_SPR0_POINTER
 }
 
+_sprite_pos_x_min: .word $0018
+_sprite_pos_x_max: .word $0140
+
 .macro update_player_pos() {
     add_signed8(_player_vel_x, _player_pos_x)
-/*
-    lda _player_pos_x+1
-    and #$80
-    cmp #$80
-    bne end
-    lda $00
+
+    cmp16(_player_pos_x, _sprite_pos_x_min)
+    bpl !+
+    lda _sprite_pos_x_min
     sta _player_pos_x
+    lda _sprite_pos_x_min+1
     sta _player_pos_x+1
-*/
+    jmp end
+!:
+    cmp16(_player_pos_x, _sprite_pos_x_max)
+    bmi !+
+    lda _sprite_pos_x_max
+    sta _player_pos_x
+    lda _sprite_pos_x_max+1
+    sta _player_pos_x+1
+    jmp end
+!:
+
 end:    
 }
+
 
 .macro calc_player_vel() {
     lda _player_acc_x
