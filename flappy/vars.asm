@@ -4,6 +4,9 @@
 .label SPRITE_POS_Y_MAX = $e5
 
 
+_num_vblanks:    .byte $00
+_num_main_loops: .byte $00
+
 _frame_count: 	.byte $00
 _slow_motion:	.byte $00
 

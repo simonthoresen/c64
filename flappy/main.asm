@@ -43,6 +43,7 @@ main_loop:
     sta _slow_motion
 
     inc _frame_count
+    inc _num_main_loops
 
     read_player_acc()
     calc_player_acc()

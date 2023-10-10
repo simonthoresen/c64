@@ -81,6 +81,16 @@ irq:
 !irq:               
 
     // my irq
+    inc _num_vblanks
+    lda _num_vblanks
+    cmp #$32
+    bne !+
+    print_byte(_num_main_loops, 37)
+
+    lda #$00
+    sta _num_vblanks
+    sta _num_main_loops
+!:
 
 !irq:
 
