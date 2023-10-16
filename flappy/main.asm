@@ -1,10 +1,10 @@
 
 
 main:
-    enable_sprites(%00000001)
-    enable_sprites_mcol(%00000001)
-    set_sprites_mcols(SPR_BEAR_MCOL0, SPR_BEAR_MCOL1)
+    enable_mcol_sprites(%00000001)
     set_sprite_col(0, COL_BROWN)
+    set_sprite_col1(SPR_BEAR_MCOL0)
+    set_sprite_col2(SPR_BEAR_MCOL1)
 
     init_move(_player_pos_x) // does nothing
 
@@ -27,7 +27,7 @@ main:
     clear_screen($20)
 
 main_loop:
-    wait_for_frame()
+    wait_vblank()
 
     dec _slow_motion
     lda _slow_motion
@@ -70,8 +70,6 @@ main_loop:
     print_byte(_player_vel_y, 47)
     print_byte(_player_acc_y, 50)      
 }
-
-
 
 .macro draw_player_spr() 
 {
@@ -253,16 +251,4 @@ end:
     sta _player_acc_x
 
 end:
-}
-
-.macro wait_for_frame() {
-!:  // in case the raster is on our marker line, we wait for it increment
-    lda $d012
-    cmp #$fa
-    beq !- 
-
-!:  // wait for the raster to reach our marker line 
-    lda $d012
-    cmp #$fa // line 250
-    bne !-    
 }

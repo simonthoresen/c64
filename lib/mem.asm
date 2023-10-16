@@ -12,6 +12,7 @@
 .const ADR_TMP2					= $0052
 .const ADR_IIDX_LO				= $00fd
 .const ADR_IIDX_HI				= $00fe
+.const ADR_IIDX 				= ADR_IIDX_LO
 
 
 .const ADR_JOY1_STATE			= $dc01

@@ -48,7 +48,7 @@ can_dec:
 	sta dst+1
 }
 
-.macro cpy_mem16(src, dst) {
+.macro cpy_adr16(src, dst) {
 	lda src
 	sta dst
 	lda src+1
@@ -62,7 +62,7 @@ can_dec:
 // src1 = src2 : Carry =  SET   Zero =  SET   Neg = CLEAR
 // src1 > src2 : Carry =  SET   Zero = CLEAR  Neg = CLEAR
 // src1 < src2 : Carry = CLEAR  Zero = CLEAR  Neg =  SET
-.macro cmp_mem16(src1, src2) {
+.macro cmp_adr16(src1, src2) {
     lda src1
     sec
     sbc src2
@@ -184,7 +184,7 @@ can_dec:
 	sta dst16+1		
 }
 
-.macro add_mem16(src, dst) {
+.macro add_adr16(src, dst) {
 	clc
 	lda dst
 	adc src
@@ -206,7 +206,7 @@ can_dec:
 	sta dst16+1	
 }
 
-.macro sub_mem16(src, dst) {
+.macro sub_adr16(src, dst) {
 	sec
 	lda dst
 	sbc src
