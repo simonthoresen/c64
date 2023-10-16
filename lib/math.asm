@@ -1,6 +1,53 @@
 // change all macros to be clear on registers used
 // f.ex. sta_val16
 
+.pseudocommand inc16 arg 
+{
+    inc arg
+    bne no_carry
+    inc _hi_byte(arg)
+no_carry:
+}
+
+.pseudocommand mov16 src:tar {
+    lda src
+    sta tar
+    lda _hi_byte(src)
+    sta _hi_byte(tar)
+}
+
+.pseudocommand add16 arg1 : arg2 : tar {
+    .if (tar.getType() == AT_NONE) {
+    	.eval tar = arg1
+    }
+    clc
+    lda arg1
+    adc arg2
+    sta tar
+    lda _hi_byte(arg1)
+    adc _hi_byte(arg2)
+    sta _hi_byte(tar)
+}
+
+.pseudocommand dec16 arg {
+	lda arg
+    bne can_dec
+    dec _hi_byte(arg) 
+    // fall through and wrap lo-byte
+can_dec:
+	dec arg
+}
+
+.pseudocommand mov16 src : tar {
+	lda src
+	sta tar
+	lda _hi_byte(src)
+	sta _hi_byte(tar)
+}
+
+
+
+
 .macro cpy_val16(val, dst) {
 	lda #<val
 	sta dst

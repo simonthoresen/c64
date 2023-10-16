@@ -6,10 +6,21 @@
 .const _TARGET_X = 5
 .const _TARGET_Y = 6
 
+.const _MOVE_SIZE = 7
+
+.macro alloc_move()
+{
+	.fill _MOVE_SIZE, $00
+}
+
 .macro init_move(obj)
 {
 	set_pos_x(obj, $0000)
-
+/*	set_pos_y(obj, $0000)
+	set_vel_x(obj, $0000)
+	set_vel_y(obj, $0000)
+	set_target_x(obj, $0000)
+	set_target_y(obj, $0000)*/
 }
 
 .macro set_pos_x(obj, val16)

@@ -20,6 +20,7 @@
 .const ADR_BORDER_COL        	= $d020
 .const ADR_BACKGROUND_COL    	= $d021
 .const ADR_SCREEN				= $0400	// default, 1000 bytes
+.const ADR_COLOR                = $d800
 
 .const ADR_SPRITE_ENABLE 		= $d015
 .const ADR_SPRITE_MCOL_ENABLE	= $d01c
