@@ -13,7 +13,7 @@ main:
     lda #COL_BROWN
     sta ADR_SPR0_COLOR
 
-    obj:init_move(_player_pos_x) // does nothing
+    init_move(_player_pos_x) // does nothing
 
     cpy_val16($0018, _player_pos_x)
     lda #SPRITE_POS_Y_MAX
