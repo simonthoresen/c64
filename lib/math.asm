@@ -1,3 +1,6 @@
+// change all macros to be clear on registers used
+// f.ex. sta_val16
+
 .macro cpy_val16(val, dst) {
 	lda #<val
 	sta dst
@@ -28,11 +31,11 @@
     sbc src2+1
     php
     pla
-    sta ADR_ZPAGE_U0
+    sta ADR_TMP
     pla
     and #%00000010
     ora #%11111101
-    and ADR_ZPAGE_U0
+    and ADR_TMP
     pha
     plp
 }
@@ -46,11 +49,11 @@
     sbc #>val
     php
     pla
-    sta ADR_ZPAGE_U0
+    sta ADR_TMP
     pla
     and #%00000010
     ora #%11111101
-    and ADR_ZPAGE_U0
+    and ADR_TMP
     pha
     plp	
 }
@@ -72,7 +75,7 @@
 
 .macro inc16(adr) {
 	inc adr
-	bne !+
+	bne !+ // not-equal means non-zero means not wrapped
 	inc adr+1
 !:
 }

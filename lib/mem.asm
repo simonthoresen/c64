@@ -1,13 +1,17 @@
-.const ADR_ZPAGE_U0				= $0002
-.const ADR_ZPAGE_U1				= $0003
-.const ADR_ZPAGE_U2				= $0004
-.const ADR_ZPAGE_U3				= $0005
-.const ADR_ZPAGE_U5				= $002a
-.const ADR_ZPAGE_U6				= $0052
-.const ADR_ZPAGE_U8				= $00fb
-.const ADR_ZPAGE_U9				= $00fc
-.const ADR_ZPAGE_UA				= $00fd
-.const ADR_ZPAGE_UB				= $00fe
+.const ADR_ARG1_LO				= $0002
+.const ADR_ARG1_HI				= $0003
+.const ADR_ARG1					= ADR_ARG1_LO
+.const ADR_ARG2_LO				= $0004
+.const ADR_ARG2_HI				= $0005
+.const ADR_ARG2					= ADR_ARG2_LO
+.const ADR_ARG3_LO				= $00fb
+.const ADR_ARG3_HI				= $00fc
+.const ADR_ARG3					= ADR_ARG3_LO
+.const ADR_TMP1					= $002a
+.const ADR_TMP					= ADR_TMP1
+.const ADR_TMP2					= $0052
+.const ADR_IIDX_LO				= $00fd
+.const ADR_IIDX_HI				= $00fe
 
 
 .const ADR_JOY1_STATE			= $dc01

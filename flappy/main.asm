@@ -13,6 +13,7 @@ main:
     lda #COL_BROWN
     sta ADR_SPR0_COLOR
 
+    obj:init_move(_player_pos_x) // does nothing
 
     cpy_val16($0018, _player_pos_x)
     lda #SPRITE_POS_Y_MAX
@@ -100,9 +101,9 @@ main_loop:
 
 .macro anim_player_spr() {
     lda _player_anim_ptr
-    sta ADR_ZPAGE_U0
+    sta ADR_IIDX_LO
     lda _player_anim_ptr+1
-    sta ADR_ZPAGE_U1
+    sta ADR_IIDX_HI
 
     lda _frame_count
     and #$03
@@ -111,18 +112,18 @@ main_loop:
     inc _player_frame
 !:
     ldy _player_frame
-    lda (ADR_ZPAGE_U0),y
+    lda (ADR_IIDX_LO),y
     cmp #$ff
     bne !+
     ldy #$00
     sty _player_frame
-    lda (ADR_ZPAGE_U0),y
+    lda (ADR_IIDX_LO),y
 !:
     clc
     adc #ADR_DATA_64
     sta ADR_SPR0_POINTER
 
-    print_word(ADR_ZPAGE_U0, 120)
+    print_word(ADR_IIDX_LO, 120)
     print_byte(ADR_SPR0_POINTER, 125)
     print_byte(_player_frame, 160)    
 }

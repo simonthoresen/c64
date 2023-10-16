@@ -3,3 +3,5 @@
 #import "mem.asm"
 #import "misc.asm"
 #import "print.asm"
+#import "obj_anim.asm"
+#import "obj_move.asm"
