@@ -1,4 +1,3 @@
-#import "anim.asm"
 #import "args.asm"
 #import "const.asm"
 #import "math.asm"
@@ -7,3 +6,4 @@
 #import "move.asm"
 #import "print.asm"
 #import "reps.asm"
+#import "sprite.asm"

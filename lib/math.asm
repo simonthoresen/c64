@@ -9,13 +9,6 @@
 no_carry:
 }
 
-.pseudocommand mov16 src:tar {
-    lda src
-    sta tar
-    lda _hi_byte(src)
-    sta _hi_byte(tar)
-}
-
 .pseudocommand add16 arg1 : arg2 : tar {
     .if (tar.getType() == AT_NONE) {
     	.eval tar = arg1

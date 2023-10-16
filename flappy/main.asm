@@ -1,17 +1,10 @@
 
 
 main:
-    lda #%00000001 
-    sta ADR_SPRITE_ENABLE
-    sta ADR_SPRITE_MCOL_ENABLE
-
-    lda #SPR_BEAR_MCOL0
-    sta ADR_SPRITE_MCOL0
-    lda #SPR_BEAR_MCOL1
-    sta ADR_SPRITE_MCOL1
-
-    lda #COL_BROWN
-    sta ADR_SPR0_COLOR
+    enable_sprites(%00000001)
+    enable_sprites_mcol(%00000001)
+    set_sprites_mcols(SPR_BEAR_MCOL0, SPR_BEAR_MCOL1)
+    set_sprite_col(0, COL_BROWN)
 
     init_move(_player_pos_x) // does nothing
 
@@ -80,23 +73,10 @@ main_loop:
 
 
 
-.macro draw_player_spr() {
-    lda _player_pos_x
-    sta ADR_SPR0_POSX
-
-    lda ADR_SPRITE_POSX_BIT9
-    ldx _player_pos_x+1
-    cpx #$00
-    beq !+
-    ora #%00000001
-    jmp !++
-!:
-    and #%11111110
-!:
-    sta ADR_SPRITE_POSX_BIT9
-
-    lda _player_pos_y
-    sta ADR_SPR0_POSY
+.macro draw_player_spr() 
+{
+    set_sprite_screen_x16(0, _player_pos_x)
+    set_sprite_screen_y(0, _player_pos_y)
 }
 
 .macro anim_player_spr() {
