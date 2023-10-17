@@ -9,7 +9,8 @@
 no_carry:
 }
 
-.pseudocommand add16 arg1 : arg2 : tar {
+.pseudocommand add16 arg1 : arg2 : tar 
+{
     .if (tar.getType() == AT_NONE) {
     	.eval tar = arg1
     }
@@ -96,6 +97,11 @@ can_dec:
     and ADR_TMP
     pha
     plp	
+}
+
+.macro add__a8s(dst16, a8s) 
+{
+	add_signed8(a8s, dst16)
 }
 
 .macro add_signed8(src8, dst16) {

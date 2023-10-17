@@ -1,12 +1,8 @@
-
-
 main:
     enable_mcol_sprites(%00000001)
     set_sprite_col(0, COL_BROWN)
     set_sprite_col1(SPR_BEAR_MCOL0)
     set_sprite_col2(SPR_BEAR_MCOL1)
-
-    init_move(_player_pos_x) // does nothing
 
     cpy_val16($0018, _player_pos_x)
     lda #SPRITE_POS_Y_MAX
@@ -78,6 +74,7 @@ main_loop:
 }
 
 .macro anim_player_spr() {
+
     lda _player_anim_ptr
     sta ADR_IIDX_LO
     lda _player_anim_ptr+1

@@ -2,7 +2,7 @@
 #import "const.asm"
 #import "math.asm"
 #import "mem.asm"
-#import "move.asm"
+#import "object.asm"
 #import "print.asm"
 #import "reps.asm"
 #import "screen.asm"

@@ -5,12 +5,6 @@
 // this library then creates functions to manipulate aspects
 // of the anim, with a pointer to the anim object
 /*.const ADR_SPRITE_POINTERS		= ADR_SCREEN + $03f8
-.const ADR_SPRITE_POSX_BIT9     = $d010
-
-.const ADR_SPR0_COLOR  		    = $d027
-.const ADR_SPR0_POSX 			= $d000
-.const ADR_SPR0_POSY 			= $d001
-.const ADR_SPR0_POINTER			= ADR_SPRITE_POINTERS + 0
 */
 
 .enum {
@@ -84,6 +78,14 @@ end:
 {
 	inc_anim(adr_sprite)
 }
+
+
+
+// ------------------------------------------------------------
+//
+// Static helper functions.
+//
+// ------------------------------------------------------------
 
 .macro set_sprite_screen_x16(sprite_id, adr16)
 {

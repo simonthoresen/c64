@@ -20,7 +20,7 @@ _player_pos_y: 	.byte $00
 _player_acc_y: 	.byte $00
 _player_vel_y: 	.byte $00
 
-_player_move: alloc_move()
+_player: alloc_obj()
 //_player_sprite: alloc_sprite()
 
 
