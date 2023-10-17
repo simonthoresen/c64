@@ -99,7 +99,7 @@ can_dec:
     plp	
 }
 
-.macro add__a8s(dst16, a8s) 
+.macro add_a8s_to_a16u(dst16, a8s) 
 {
 	add_signed8(a8s, dst16)
 }

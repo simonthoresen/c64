@@ -1,15 +1,13 @@
 BasicUpstart2(startup)
 
 .const ADR_DATA = $2000
-.const ADR_DATA_64 = ADR_DATA/64
+.const DATA_BLOCK = ADR_DATA/64
 *=ADR_DATA "Data"
 #import "data.asm"
 
 *=$4000 "Main Program"
-#import "input.asm"
-#import "c64lib.asm"
 #import "main.asm"
-#import "vars.asm"
+#import "c64lib.asm"
 
 
 startup:
@@ -81,17 +79,7 @@ irq:
 
 !irq:               
 
-    // my irq
-    inc _num_vblanks
-    lda _num_vblanks
-    cmp #$32
-    bne !+
-    print_byte(_num_main_loops, 37)
-
-    lda #$00
-    sta _num_vblanks
-    sta _num_main_loops
-!:
+    count_vblank()
 
 !irq:
 
@@ -104,3 +92,39 @@ irq:
     rti        // Return From Interrupt, this will load into the Program Counter register the address
                // where the CPU was when the interrupt condition arised which will make the CPU continue
                // the code it was interrupted at also restores the status register of the CPU
+
+
+// ------------------------------------------------------------
+//
+// Sync routines for screen refresh and game loop.
+//
+// ------------------------------------------------------------
+.macro count_vblank()
+{
+    dec _num_vblanks
+    bpl end // return if less than a second
+
+    lda #$32
+    cmp _num_ticks
+    beq !+
+    lda #RED
+    jmp !++
+!:
+    lda #GREEN
+!:
+    sta ADR_COLOR
+
+    print_byte(_num_ticks, 38, 0)
+    lda #$31
+    sta _num_vblanks
+    lda #$00
+    sta _num_ticks
+
+end:
+}
+
+.macro sync_tick()
+{
+    wait_vblank()
+    inc _num_ticks
+}

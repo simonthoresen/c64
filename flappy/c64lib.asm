@@ -1,0 +1,113 @@
+// ------------------------------------------------------------
+//
+// C64 constants
+//
+// ------------------------------------------------------------
+.const ADR_SCREEN_DAT = $0400
+.const ADR_SCREEN_COL = $d800
+.const ADR_COLOR      = $0286
+
+
+// ------------------------------------------------------------
+//
+// Wait for the next vertical blank. Good for syncing the main
+// loop to a fixed frequency.
+//
+// ------------------------------------------------------------
+.macro wait_vblank() {
+!:  // in case the raster is on our marker line, we wait for it increment
+    lda $d012
+    cmp #$fa
+    beq !- 
+
+!:  // wait for the raster to reach our marker line 
+    lda $d012
+    cmp #$fa // line 250
+    bne !-    
+}
+
+
+// ------------------------------------------------------------
+//
+// Fill the screen with a byte or a color.
+//
+// ------------------------------------------------------------
+.macro clear_screen(clearByte) 
+{
+    lda #clearByte
+    ldx #$00
+!:
+    sta ADR_SCREEN_DAT, x
+    sta ADR_SCREEN_DAT + $0100, x
+    sta ADR_SCREEN_DAT + $0200, x
+    sta ADR_SCREEN_DAT + $0300, x
+    inx
+    bne !-
+}
+
+.macro clear_colors(clearByte) 
+{
+    lda #clearByte
+    ldx #$00
+!:
+    sta ADR_SCREEN_COL, x
+    sta ADR_SCREEN_COL + $0100, x
+    sta ADR_SCREEN_COL + $0200, x
+    sta ADR_SCREEN_COL + $0300, x
+    inx
+    bne !-  
+}
+
+
+// ------------------------------------------------------------
+//
+// Printing to the screen.
+//
+// ------------------------------------------------------------
+.macro print_word(src, pos_x, pos_y) {
+    print_byte(src+1, pos_x, pos_y)
+    print_byte(src, pos_x + 2, pos_y)
+}
+
+.macro print_byte(src, pos_x, pos_y) {
+    lda src
+    ldx #pos_y * 40 + pos_x
+    jsr print.byte
+}
+
+.namespace print {
+
+byte:
+    pha
+    lsr
+    lsr
+    lsr
+    lsr
+    jsr nibble
+    
+    pla
+    and #$0f
+    inx
+    jsr nibble
+    rts
+
+nibble:
+    cmp #$0a
+    bcs letter
+
+digit:
+    ora #$30
+    jmp !+
+
+letter:
+    clc
+    sbc #$08
+
+!:
+    sta ADR_SCREEN_DAT,x
+
+    lda ADR_COLOR
+    sta ADR_SCREEN_COL,x
+    rts
+
+} 

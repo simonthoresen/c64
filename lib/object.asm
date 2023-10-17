@@ -42,28 +42,32 @@
 		// fall through 
 
 	move:
-		add__a8s(this + _POS_X, this + _VEL_X)
-		add__a8s(this + _POS_Y, this + _VEL_Y)
+		add__a16u_a8s(this + _POS_X, this + _VEL_X)
+		add__a16u_a8s(this + _POS_Y, this + _VEL_Y)
 }
 
 .macro set_pos_x__i16u(this, val16)
 {
-	set__i16u(this + _POS_X, val16)
+	set_a16u_to_i16u(this + _POS_X, val16)
 }
 
 .macro set_pos_y__i16u(this, val16)
 {
-	set__i16u(this + _POS_Y, val16)
+	set_a16u_to_i16u(this + _POS_Y, val16)
 }
 
-.macro set_vel_x_target__i16u(this, val16)
+.macro set_vel_x_target__i8s(this, i8s)
 {
-	set__i16u(this + _VEL_X_TARGET, val16)
+	set_a8s_to_i8s(
+		a8s__get_vel_x_target(this),
+		i8s)
 }
 
-.macro set_vel_y_target__i16u(this, val16)
+.macro set_vel_y_target__i8s(this, i8s)
 {
-	set__i16u(get_vel_y_target__a16u(this), val16)
+	set_a8s_to_i8s(
+		a8s__get_vel_y_target(this),
+		i8s)
 }
 
 
@@ -73,13 +77,13 @@
 //
 // ------------------------------------------------------------
 
-.macro set__i8u(dst8, i8u)
+.macro set_a8u_to_i8u(dst8, i8u)
 {
 	lda #i8u
 	sta dst8
 }
 
-.macro set__i16u(dst16, i16u)
+.macro set_a16u_to_i16u(dst16, i16u)
 {
 	lda #<i16u
 	sta dst16
@@ -87,12 +91,13 @@
 	sta dst16 + 1
 }
 
-.function get_vel_y_target__a16u(this)
+.function a8s__get_vel_x_target(this)
 {
-	.return this + _POS_X
+	.return this + _VEL_X
 }
 
-.macro get_screen_y__a16u(obj)
+.function a8s__get_vel_y_target(this)
 {
-
+	.return this + _VEL_Y
 }
+
