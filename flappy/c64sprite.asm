@@ -38,11 +38,60 @@
 {
 	lda a8__get_sprite_col(this)
 	ldx a8__get_sprite_id(this)
-	sta $d027,x
+	sta $d027,x // C64_SPRITE_COLOR
+
+	position_sprite(this)
 
 	lda a8__get_sprite_id_mask(this)
 	ora $d015
-	sta $d015
+	sta $d015 // C64_SPRITE_ENABLED
+}
+
+.macro hide_sprite(this)
+{
+	lda $ff
+	eor a8__get_sprite_id_mask(this)
+	and $d015
+	sta $d015 // C64_SPRITE_ENABLED
+}
+
+.macro position_sprite(this)
+{
+	lda a8__get_sprite_id(this)
+	asl
+	tax
+
+	// position x
+	lda a8__get_sprite_pos_x_lo(this)
+	lsr 4
+	sta $d000,x // C64_SPRITE_POS_X
+	lda a8__get_sprite_pos_x_hi(this)
+	and $f0
+	and $d000,x
+	sta $d000,x
+
+	lda a8__get_sprite_pos_x_hi(this)
+	lsr 4
+	cmp #$00
+	bne !+
+	lda $ff // invert id mask to unset upper
+	eor a8__get_sprite_id_mask(this) 
+	and $d010 
+	jmp !++
+!:
+	lda $d010
+	ora a8__get_sprite_id_mask(this) // set bit
+!:
+	sta $d010 // C64_SPRITE_POS_X_UPPER
+
+	// position y
+	lda a8__get_sprite_pos_y_lo(this)
+	lsr 4
+	sta $d001,x // C64_SPRITE_POS_Y
+	lda a8__get_sprite_pos_y_hi(this)
+	and $f0
+	and $d001,x
+	sta $d001,x
 }
 
 .macro tick_sprite(this)
@@ -184,6 +233,16 @@
 	.return this + SPRITE__POS_X
 }
 
+.function a8__get_sprite_pos_x_lo(this)
+{
+	.return this + SPRITE__POS_X
+}
+
+.function a8__get_sprite_pos_x_hi(this)
+{
+	.return this + SPRITE__POS_X + 1
+}
+
 .macro set_sprite_pos_y__a16(this, a16)
 {
 	set__a16(a16__get_sprite_pos_y(this), a16)
@@ -197,6 +256,16 @@
 .function a16__get_sprite_pos_y(this)
 {
 	.return this + SPRITE__POS_Y
+}
+
+.function a8__get_sprite_pos_y_lo(this)
+{
+	.return this + SPRITE__POS_Y
+}
+
+.function a8__get_sprite_pos_y_hi(this)
+{
+	.return this + SPRITE__POS_Y + 1
 }
 
 .macro set_sprite_actual_vel_x__a8s(this, a8s)
