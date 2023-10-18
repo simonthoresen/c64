@@ -6,8 +6,10 @@ BasicUpstart2(startup)
 #import "data.asm"
 
 *=$4000 "Main Program"
-#import "main.asm"
+#import "sprite.asm"
 #import "c64lib.asm"
+
+#import "main.asm"
 
 
 startup:

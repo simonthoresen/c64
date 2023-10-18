@@ -7,7 +7,7 @@ BasicUpstart2(startup)
 
 *=$4000 "Main Program"
 #import "input.asm"
-#import "c64lib.asm"
+#import "../lib/c64lib.asm"
 #import "main.asm"
 #import "vars.asm"
 

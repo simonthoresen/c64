@@ -3,9 +3,43 @@
 // C64 constants
 //
 // ------------------------------------------------------------
-.const ADR_SCREEN_DAT = $0400
-.const ADR_SCREEN_COL = $d800
-.const ADR_COLOR      = $0286
+.label ADR_SCREEN_DAT = $0400
+.label ADR_SCREEN_COL = $d800
+.label ADR_COLOR      = $0286
+
+
+// ------------------------------------------------------------
+//
+// Permutations of getters and setters.
+//
+// ------------------------------------------------------------
+.macro set__a8(a8_var, a8_val)
+{
+    lda a8_val
+    sta a8_var
+}
+
+.macro set__i8(a8_var, i8_val)
+{
+    lda i8_val
+    sta a8_var
+}
+
+.macro set__a16(a16_var, a16_val)
+{
+    lda a16_val
+    sta a16_var
+    lda a16_val + 1
+    sta a16_var + 1
+}
+
+.macro set__i16(a16_var, i16_val)
+{
+    lda #<i16_val
+    sta a16_var
+    lda #>i16_val
+    sta a16_var + 1
+}
 
 
 // ------------------------------------------------------------
