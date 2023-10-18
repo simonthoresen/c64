@@ -108,13 +108,13 @@
 .byte $90,$1a,$9a,$90,$1a,$9a,$90,$88
 
 
-_anim_bear_walk_r:
+ANIM_BEAR_RIGHT:
     .byte $00, $01, $02, $03, $02, $01, $ff
 
-_anim_bear_walk_l:
+ANIM_BEAR_LEFT:
     .byte $04, $05, $06, $07, $06, $05, $ff
 
-_anim_bear_stand:
+ANIM_BEAR_STAND:
     .byte $08, $ff 
 
 
