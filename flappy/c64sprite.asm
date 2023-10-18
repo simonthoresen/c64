@@ -3,25 +3,20 @@
 // Object fields
 //
 // ------------------------------------------------------------
-.enum {
-	SPRITE__ID = 0,
-	SPRITE__ID_MASK, // TODO: set as part of set_id
-	SPRITE__POS_X,
-	SPRITE__POS_Y = SPRITE__POS_X + 2,
-	SPRITE__ACTUAL_VEL_X = SPRITE__POS_Y + 2,
-	SPRITE__ACTUAL_VEL_Y,
-	SPRITE__TARGET_VEL_X,
-	SPRITE__TARGET_VEL_Y,
-
-	SPRITE__COL,
-
-	SPRITE__ANIM,
-	SPRITE__ANIM_TPF = SPRITE__ANIM + 2,
-	SPRITE__FRAME,
-	SPRITE__TICK,
-
-	SPRITE__NUM_BYTES
-}
+.label SPRITE__ID = 0
+.label SPRITE__ID_MASK = 1
+.label SPRITE__POS_X = 2
+.label SPRITE__POS_Y = 4
+.label SPRITE__ACTUAL_VEL_X = 6
+.label SPRITE__ACTUAL_VEL_Y = 7
+.label SPRITE__TARGET_VEL_X = 8
+.label SPRITE__TARGET_VEL_Y = 9
+.label SPRITE__COL = 10
+.label SPRITE__ANIM = 11
+.label SPRITE__ANIM_TPF = 13
+.label SPRITE__FRAME = 14
+.label SPRITE__TICK = 15
+.label SPRITE__NUM_BYTES = 16
 
 
 // ------------------------------------------------------------
@@ -41,6 +36,11 @@
 	sta $d027,x // C64_SPRITE_COLOR
 
 	position_sprite(this)
+	reference_frame(this)
+
+	lda a8__get_sprite_id_mask(this)
+	ora $d01c
+	sta $d01c // C64_SPRITE_MCOLORED
 
 	lda a8__get_sprite_id_mask(this)
 	ora $d015
@@ -49,7 +49,7 @@
 
 .macro hide_sprite(this)
 {
-	lda $ff
+	lda #$ff
 	eor a8__get_sprite_id_mask(this)
 	and $d015
 	sta $d015 // C64_SPRITE_ENABLED
@@ -61,19 +61,26 @@
 	asl
 	tax
 
+
 	// position x
 	lda a8__get_sprite_pos_x_lo(this)
-	lsr 4
-	sta $d000,x // C64_SPRITE_POS_X
+	lsr
+	lsr
+	lsr
+	lsr
+	sta $d000,x // C64_SPRITE_POS
+
 	lda a8__get_sprite_pos_x_hi(this)
-	and $f0
-	and $d000,x
+	asl
+	asl
+	asl
+	asl
+	ora $d000,x
 	sta $d000,x
 
 	lda a8__get_sprite_pos_x_hi(this)
-	lsr 4
-	cmp #$00
-	bne !+
+	cmp #$10
+	bcs !+
 	lda $ff // invert id mask to unset upper
 	eor a8__get_sprite_id_mask(this) 
 	and $d010 
@@ -82,16 +89,33 @@
 	lda $d010
 	ora a8__get_sprite_id_mask(this) // set bit
 !:
-	sta $d010 // C64_SPRITE_POS_X_UPPER
+	sta $d010 // C64_SPRITE_POS_UPPER
+
 
 	// position y
 	lda a8__get_sprite_pos_y_lo(this)
-	lsr 4
-	sta $d001,x // C64_SPRITE_POS_Y
+	lsr
+	lsr
+	lsr
+	lsr
+	sta $d001,x // C64_SPRITE_POS
 	lda a8__get_sprite_pos_y_hi(this)
-	and $f0
-	and $d001,x
+	asl
+	asl
+	asl
+	asl
+	ora $d001,x
 	sta $d001,x
+}
+
+.macro reference_frame(this)
+{
+	ldx a8__get_sprite_id(this)
+	lda #DATA_BLOCK
+
+	// todo: add anim
+
+	sta C64_SPRITE_POINTERS,x
 }
 
 .macro tick_sprite(this)
@@ -105,36 +129,6 @@
 // Static methods
 //
 // ------------------------------------------------------------
-// e.g., set_sprite_mcols
-.macro set_sprite_screen_x__a16(sprite_id, adr16)
-{
-    lda adr16
-    sta $d000 + sprite_id
-
-    lda $d010 // sprite x upper
-    ldx adr16 + 1
-    cpx #$00
-    beq !+
-    ora #%00000001 // this assumes sprite 0, needs fixing
-    jmp !++
-!:
-    and #%11111110
-!:
-    sta $d010
-}
-
-.macro set_sprite_screen_y__a8(sprite_id, adr8)
-{
-	lda adr8
-	sta $d001 + sprite_id
-}
-
-.macro set_sprite_col(sprite_id, val)
-{
-	lda #val
-	sta $d027 + sprite_id
-}
-
 .macro set_sprite_col1(val)
 {
 	lda #val
@@ -147,37 +141,6 @@
 	sta $d026
 }
 
-.macro enable_mcol_sprites(val)
-{
-	enable_sprites(val)
-	lda #val
-	ora $d01c
-	sta $d01c
-}
-
-.macro enable_mono_sprites(val)
-{
-	enable_sprites(val)
-	lda $ff
-	eor #val
-	and $d01c
-	sta $d01c
-}
-
-.macro enable_sprites(val)
-{
-	lda #val
-	ora $d015
-	sta $d015
-}
-
-.macro disable_sprites(val) 
-{
-	lda $ff
-	eor #val
-	and $d015
-	sta $d015	
-}
 
 
 // ------------------------------------------------------------

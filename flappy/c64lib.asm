@@ -6,6 +6,7 @@
 .label ADR_SCREEN_DAT = $0400
 .label ADR_SCREEN_COL = $d800
 .label ADR_COLOR      = $0286
+.label C64_SPRITE_POINTERS = $07f8
 
 
 // ------------------------------------------------------------
@@ -21,7 +22,7 @@
 
 .macro set__i8(a8_var, i8_val)
 {
-    lda i8_val
+    lda #i8_val
     sta a8_var
 }
 
@@ -90,51 +91,6 @@
     sta ADR_SCREEN_COL + $0300, x
     inx
     bne !-  
-}
-
-
-// ------------------------------------------------------------
-//
-// Pseudocommands for repeating certain opcodes.
-//
-// ------------------------------------------------------------
-.macro assert_immediate(arg) 
-{
-    .if (arg.getType() != AT_IMMEDIATE) {
-        .error "The argument must be immediate!" 
-    }
-}
-
-.pseudocommand asl x 
-{
-    assert_immediate(x)
-    .for (var i = 0; i < x.getValue(); i++) {
-        asl
-    }
-}
-
-.pseudocommand lsr x 
-{
-    assert_immediate(x)
-    .for (var i = 0; i < x.getValue(); i++) {
-        lsr
-    }
-}
-
-.pseudocommand rol x 
-{
-    assert_immediate(x)
-    .for (var i = 0; i < x.getValue(); i++) {
-        rol
-    }
-}
-
-.pseudocommand ror x 
-{
-    assert_immediate(x)
-    .for (var i = 0; i < x.getValue(); i++) {
-        ror
-    }
 }
 
 
