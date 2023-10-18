@@ -5,12 +5,15 @@
 // ------------------------------------------------------------
 .enum {
 	SPRITE__ID = 0,
+	SPRITE__ID_MASK, // TODO: set as part of set_id
 	SPRITE__POS_X,
 	SPRITE__POS_Y = SPRITE__POS_X + 2,
 	SPRITE__ACTUAL_VEL_X = SPRITE__POS_Y + 2,
 	SPRITE__ACTUAL_VEL_Y,
 	SPRITE__TARGET_VEL_X,
 	SPRITE__TARGET_VEL_Y,
+
+	SPRITE__COL,
 
 	SPRITE__ANIM,
 	SPRITE__ANIM_TPF = SPRITE__ANIM + 2,
@@ -33,6 +36,17 @@
 
 .macro show_sprite(this)
 {
+	lda a8__get_sprite_col(this)
+	ldx a8__get_sprite_id(this)
+	sta $d027,x
+
+	lda a8__get_sprite_id_mask(this)
+	ora $d015
+	sta $d015
+}
+
+.macro tick_sprite(this)
+{
 
 }
 
@@ -52,7 +66,7 @@
     ldx adr16 + 1
     cpx #$00
     beq !+
-    ora #%00000001
+    ora #%00000001 // this assumes sprite 0, needs fixing
     jmp !++
 !:
     and #%11111110
@@ -122,19 +136,25 @@
 // Accessors
 //
 // ------------------------------------------------------------
-.macro set_sprite_id__a8(this, a8)
-{
-	set__a8(a8__get_sprite_id(this), a8)
-}
-
 .macro set_sprite_id__i8(this, i8)
 {
 	set__i8(a8__get_sprite_id(this), i8)
+	set__i8(a8__get_sprite_id_mask(this), 1 << i8)
 }
 
 .function a8__get_sprite_id(this)
 {
 	.return this + SPRITE__ID
+}
+
+.macro set_sprite_id_mask__i8(this, i8)
+{
+	set__i8(a8__get_sprite_id_mask(this), i8)
+}
+
+.function a8__get_sprite_id_mask(this)
+{
+	.return this + SPRITE__ID_MASK
 }
 
 .macro set_sprite_pos__a16(this, a16_x, a16_y)
@@ -237,6 +257,16 @@
 .function a8s__get_sprite_target_vel_y(this)
 {
 	.return this + SPRITE__TARGET_VEL_Y
+}
+
+.macro set_sprite_col__i8(this, i8)
+{
+	set__i8(a8__get_sprite_col(this), i8)
+}
+
+.function a8__get_sprite_col(this)
+{
+	.return this + SPRITE__COL
 }
 
 .macro set_sprite_anim__i16(this, i16)
