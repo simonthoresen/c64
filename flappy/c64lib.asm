@@ -66,6 +66,29 @@
     sta a16_var + 1
 }
 
+.macro inc__a16(a16_var)
+{
+    inc a16_var
+    bne no_carry
+    inc a16_var + 1
+no_carry:
+}
+
+.macro add__a16_i8s(a16_var, i8s_val)
+{
+    clc
+    lda #i8s_val
+    adc a16_var
+    sta a16_var
+
+    // sign-extend the high byte
+    lda #i8s_val
+    and #$80    // extract the sign bit
+    beq !+      // if zero, add #$00 (+carry)
+    lda #$ff    // else, add $ff (+ carry)
+!:  adc a16_var + 1
+    sta a16_var + 1
+}
 
 // ------------------------------------------------------------
 //

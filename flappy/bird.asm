@@ -26,8 +26,10 @@
 	sta C64__SPRITE_POS + sprite_id + 4
 	sta C64__SPRITE_POS + sprite_id + 6
 
-	lda #(1 << sprite_id *4)
-	bit C64__SPRITE_POS_UPPER
+/*
+	lda #(1 << sprite_id * 4)
+	and C64__SPRITE_POS_UPPER
+	cmp $00
 	beq !+ // no upper
 	lda C64__SPRITE_POS_UPPER
 	eor #bird_mask
@@ -37,7 +39,7 @@
 	ora #bird_mask
 !:
 	sta C64__SPRITE_POS_UPPER
-
+*/
 	lda C64__SPRITE_POS + sprite_id + 1
 	sta C64__SPRITE_POS + sprite_id + 3
 	sta C64__SPRITE_POS + sprite_id + 5

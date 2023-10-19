@@ -136,7 +136,7 @@ no_color:
 
 .macro tick_sprite(this)
 {
-
+	position_sprite(this)
 }
 
 
