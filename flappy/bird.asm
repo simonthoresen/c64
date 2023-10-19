@@ -1,5 +1,5 @@
 .macro show_bird(sprite_id, bird_mask, col)
-{
+{	
 	lda #C64__BLACK
 	sta C64__SPRITE_COLOR + sprite_id + 1
 	lda #C64__LGREY
@@ -18,8 +18,6 @@
 	ora C64__SPRITE_ENABLED
 	sta C64__SPRITE_ENABLED
 }
-
-_tmp: .byte $00
 
 .macro tick_bird(sprite_id, bird_mask)
 {
