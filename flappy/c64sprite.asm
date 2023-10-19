@@ -32,28 +32,32 @@
 
 .macro show_sprite(this)
 {
+	// set sprite color
 	lda a8__get_sprite_color(this)
 	ldx a8__get_sprite_id(this)
-	sta C64__SPRITE_COLOR
+	sta C64__SPRITE_COLOR, x
 
+	// set sprite position on screen
 	position_sprite(this)
+
+	// set sprite data pointer
 	reference_frame(this)
 
-	print_byte(a8__get_sprite_colored(this), 0, 3)
-
+	// set colored flag
 	lda a8__get_sprite_colored(this)
 	cmp #$00
-	beq no_col
+	beq no_color
 	lda a8__get_sprite_id_mask(this)
 	ora C64__SPRITE_COLORED // enable
 	jmp !+
-no_col:
+no_color:
 	lda #$ff
 	eor a8__get_sprite_id_mask(this)
 	and C64__SPRITE_COLORED
 !:
 	sta C64__SPRITE_COLORED
 
+	// set enabled flag
 	lda a8__get_sprite_id_mask(this)
 	ora C64__SPRITE_ENABLED
 	sta C64__SPRITE_ENABLED
@@ -80,28 +84,28 @@ no_col:
 	lsr
 	lsr
 	lsr
-	sta $d000,x // C64_SPRITE_POS
+	sta C64__SPRITE_POS,x // C64_SPRITE_POS
 
 	lda a8__get_sprite_pos_x_hi(this)
 	asl
 	asl
 	asl
 	asl
-	ora $d000,x
-	sta $d000,x
+	ora C64__SPRITE_POS,x
+	sta C64__SPRITE_POS,x
 
 	lda a8__get_sprite_pos_x_hi(this)
 	cmp #$10
 	bcs !+
 	lda $ff // invert id mask to unset upper
 	eor a8__get_sprite_id_mask(this) 
-	and $d010 
+	and C64__SPRITE_POS_UPPER 
 	jmp !++
 !:
-	lda $d010
+	lda C64__SPRITE_POS_UPPER
 	ora a8__get_sprite_id_mask(this) // set bit
 !:
-	sta $d010 // C64_SPRITE_POS_UPPER
+	sta C64__SPRITE_POS_UPPER
 
 
 	// position y
@@ -110,14 +114,14 @@ no_col:
 	lsr
 	lsr
 	lsr
-	sta $d001,x // C64_SPRITE_POS
+	sta C64__SPRITE_POS+1,x
 	lda a8__get_sprite_pos_y_hi(this)
 	asl
 	asl
 	asl
 	asl
-	ora $d001,x
-	sta $d001,x
+	ora C64__SPRITE_POS+1,x
+	sta C64__SPRITE_POS+1,x
 }
 
 .macro reference_frame(this)

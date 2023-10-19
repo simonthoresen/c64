@@ -3,17 +3,18 @@
 // C64 constants
 //
 // ------------------------------------------------------------
-.label C64__SCREEN_DAT      = $0400
-.label C64__SCREEN_COL      = $d800
-.label C64__COLOR           = $0286
-.label C64__SPRITE_POINTERS = $07f8
-.label C64__RASTER_LINE     = $d012
-.label C64__SPRITE_COLOR    = $d027
-.label C64__SPRITE_COLOR_1  = $d025
-.label C64__SPRITE_COLOR_2  = $d026
-.label C64__SPRITE_COLORED  = $d01c
-.label C64__SPRITE_ENABLED  = $d015
-
+.label C64__SCREEN_DAT       = $0400
+.label C64__SCREEN_COL       = $d800
+.label C64__COLOR            = $0286
+.label C64__SPRITE_POINTERS  = $07f8
+.label C64__RASTER_LINE      = $d012
+.label C64__SPRITE_COLOR     = $d027
+.label C64__SPRITE_COLOR_1   = $d025
+.label C64__SPRITE_COLOR_2   = $d026
+.label C64__SPRITE_COLORED   = $d01c
+.label C64__SPRITE_ENABLED   = $d015
+.label C64__SPRITE_POS_UPPER = $d010
+.label C64__SPRITE_POS       = $d000
 
 // ------------------------------------------------------------
 //

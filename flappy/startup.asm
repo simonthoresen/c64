@@ -5,6 +5,7 @@ BasicUpstart2(startup)
 #import "c64lib.asm"
 #import "c64sprite.asm"
 #import "main.asm"
+#import "bird.asm"
 
 
 startup:
