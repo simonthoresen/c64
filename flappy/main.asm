@@ -3,15 +3,15 @@ _player_spr:
 
 main:
 	clear_screen($20)
-	set_sprite_pos__i16(_player_spr, $1180, $0320)
+	set_sprite_pos__i16(_player_spr, $1350, $0320)
 	set_sprite_anim__i16(_player_spr, ANIM_BIRD)
 	set_sprite_id__i8(_player_spr, $00)
-	set_sprite_color__i8(_player_spr, RED)
+	set_sprite_color__i8(_player_spr, C64__GREY)
 	set_sprite_colored__i8(_player_spr, $00)
 	set_sprite_color_1(BLACK)
 	set_sprite_color_2(WHITE)
 	show_sprite(_player_spr)
-	show_bird($00, BLUE)
+	show_bird($00, $0e, BLUE)
 
 main_loop:
     sync_tick()

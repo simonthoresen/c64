@@ -16,6 +16,23 @@
 .label C64__SPRITE_POS_UPPER = $d010
 .label C64__SPRITE_POS       = $d000
 
+.label C64__BLACK            = $00
+.label C64__WHITE            = $01
+.label C64__RED              = $02
+.label C64__CYAN             = $03
+.label C64__PURPLE           = $04
+.label C64__GREEN            = $05
+.label C64__BLUE             = $06
+.label C64__YELLOW           = $07
+.label C64__ORANGE           = $08
+.label C64__BROWN            = $09
+.label C64__LRED             = $0a
+.label C64__DGREY            = $0b
+.label C64__GREY             = $0c
+.label C64__LGREEN           = $0d
+.label C64__LBLUE            = $0e
+.label C64__LGREY            = $0f
+
 // ------------------------------------------------------------
 //
 // Permutations of getters and setters.

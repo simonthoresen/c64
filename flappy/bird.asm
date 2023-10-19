@@ -1,61 +1,53 @@
-.macro show_bird(sprite_id, col)
+.macro show_bird(sprite_id, bird_mask, col)
 {
-	lda #BLACK
-	sta C64__SPRITE_COLOR+1
-	lda #col
-	sta C64__SPRITE_COLOR+2
-	lda #YELLOW
-	sta C64__SPRITE_COLOR+3
+	lda #C64__BLACK
+	sta C64__SPRITE_COLOR + sprite_id + 1
+	lda #C64__LGREY
+	sta C64__SPRITE_COLOR + sprite_id + 2
+	lda #C64__YELLOW
+	sta C64__SPRITE_COLOR + sprite_id + 3
 
-	tick_bird(sprite_id)
-
-	lda #($0e << 4 * sprite_id)
-	eor #$ff
+	lda $ff
+	eor #bird_mask
 	and C64__SPRITE_COLORED
 	sta C64__SPRITE_COLORED
 
-	lda #($0e << 4 * sprite_id)
+	tick_bird(sprite_id, bird_mask)
+
+	lda #bird_mask
 	ora C64__SPRITE_ENABLED
 	sta C64__SPRITE_ENABLED
 }
 
-.macro tick_bird(sprite_id)
+.macro tick_bird(sprite_id, bird_mask)
 {
-	lda #sprite_id
-	asl
-	tax
+	lda C64__SPRITE_POS + sprite_id
+	sta C64__SPRITE_POS + sprite_id + 2
+	sta C64__SPRITE_POS + sprite_id + 4
+	sta C64__SPRITE_POS + sprite_id + 6
 
-	lda C64__SPRITE_POS,x
-	sta C64__SPRITE_POS+2,x
-	sta C64__SPRITE_POS+4,x
-	sta C64__SPRITE_POS+6,x
-
-	lda C64__SPRITE_POS+1,x
-	sta C64__SPRITE_POS+3,x
-	sta C64__SPRITE_POS+5,x
-	sta C64__SPRITE_POS+7,x
-
+	lda #(1 << sprite_id *4)
+	bit C64__SPRITE_POS_UPPER
+	beq !+ // no upper
 	lda C64__SPRITE_POS_UPPER
-	and #($01 << sprite_id)
-	cmp #$00
-	beq !+
-	lda #($0f << 4 * sprite_id)
-	ora C64__SPRITE_POS_UPPER
+	eor #bird_mask
 	jmp !++
 !:
-	lda #$ff
-	eor #($0f << 4 * sprite_id)
-	and C64__SPRITE_POS_UPPER
+	lda C64__SPRITE_POS_UPPER
+	ora #bird_mask
 !:
 	sta C64__SPRITE_POS_UPPER
 
+	lda C64__SPRITE_POS + sprite_id + 1
+	sta C64__SPRITE_POS + sprite_id + 3
+	sta C64__SPRITE_POS + sprite_id + 5
+	sta C64__SPRITE_POS + sprite_id + 7
 
-	ldx #sprite_id
-	lda C64__SPRITE_POINTERS, x
-	adc #$05
-	sta C64__SPRITE_POINTERS + 1, x 
-	adc #$05
-	sta C64__SPRITE_POINTERS + 2, x 	
-	lda #$0f // beak is static
-	sta C64__SPRITE_POINTERS + 3, x 
+	ldx C64__SPRITE_POINTERS + sprite_id
+	inx
+	stx C64__SPRITE_POINTERS + sprite_id + 1
+	inx
+	stx C64__SPRITE_POINTERS + sprite_id + 2
+	inx
+	stx C64__SPRITE_POINTERS + sprite_id + 3
 }
