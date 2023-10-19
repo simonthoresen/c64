@@ -3,10 +3,16 @@
 // C64 constants
 //
 // ------------------------------------------------------------
-.label ADR_SCREEN_DAT = $0400
-.label ADR_SCREEN_COL = $d800
-.label ADR_COLOR      = $0286
-.label C64_SPRITE_POINTERS = $07f8
+.label C64__SCREEN_DAT      = $0400
+.label C64__SCREEN_COL      = $d800
+.label C64__COLOR           = $0286
+.label C64__SPRITE_POINTERS = $07f8
+.label C64__RASTER_LINE     = $d012
+.label C64__SPRITE_COLOR    = $d027
+.label C64__SPRITE_COLOR_1  = $d025
+.label C64__SPRITE_COLOR_2  = $d026
+.label C64__SPRITE_COLORED  = $d01c
+.label C64__SPRITE_ENABLED  = $d015
 
 
 // ------------------------------------------------------------
@@ -51,12 +57,12 @@
 // ------------------------------------------------------------
 .macro wait_vblank() {
 !:  // in case the raster is on our marker line, we wait for it increment
-    lda $d012
+    lda C64__RASTER_LINE
     cmp #$fa
     beq !- 
 
 !:  // wait for the raster to reach our marker line 
-    lda $d012
+    lda C64__RASTER_LINE
     cmp #$fa // line 250
     bne !-    
 }
@@ -72,10 +78,10 @@
     lda #clearByte
     ldx #$00
 !:
-    sta ADR_SCREEN_DAT, x
-    sta ADR_SCREEN_DAT + $0100, x
-    sta ADR_SCREEN_DAT + $0200, x
-    sta ADR_SCREEN_DAT + $0300, x
+    sta C64__SCREEN_DAT, x
+    sta C64__SCREEN_DAT + $0100, x
+    sta C64__SCREEN_DAT + $0200, x
+    sta C64__SCREEN_DAT + $0300, x
     inx
     bne !-
 }
@@ -85,10 +91,10 @@
     lda #clearByte
     ldx #$00
 !:
-    sta ADR_SCREEN_COL, x
-    sta ADR_SCREEN_COL + $0100, x
-    sta ADR_SCREEN_COL + $0200, x
-    sta ADR_SCREEN_COL + $0300, x
+    sta C64__SCREEN_COL, x
+    sta C64__SCREEN_COL + $0100, x
+    sta C64__SCREEN_COL + $0200, x
+    sta C64__SCREEN_COL + $0300, x
     inx
     bne !-  
 }
@@ -139,10 +145,10 @@ letter:
     sbc #$08
 
 !:
-    sta ADR_SCREEN_DAT,x
+    sta C64__SCREEN_DAT, x
 
-    lda ADR_COLOR
-    sta ADR_SCREEN_COL,x
+    lda C64__COLOR
+    sta C64__SCREEN_COL, x
     rts
 
 } 

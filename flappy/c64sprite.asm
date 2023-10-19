@@ -11,12 +11,13 @@
 .label SPRITE__ACTUAL_VEL_Y = 7
 .label SPRITE__TARGET_VEL_X = 8
 .label SPRITE__TARGET_VEL_Y = 9
-.label SPRITE__COL = 10
-.label SPRITE__ANIM = 11
-.label SPRITE__ANIM_TPF = 13
-.label SPRITE__FRAME = 14
-.label SPRITE__TICK = 15
-.label SPRITE__NUM_BYTES = 16
+.label SPRITE__COLOR = 10
+.label SPRITE__COLORED = 11
+.label SPRITE__ANIM = 12
+.label SPRITE__ANIM_TPF = 14
+.label SPRITE__FRAME = 15
+.label SPRITE__TICK = 16
+.label SPRITE__NUM_BYTES = 17
 
 
 // ------------------------------------------------------------
@@ -31,28 +32,39 @@
 
 .macro show_sprite(this)
 {
-	lda a8__get_sprite_col(this)
+	lda a8__get_sprite_color(this)
 	ldx a8__get_sprite_id(this)
-	sta $d027,x // C64_SPRITE_COLOR
+	sta C64__SPRITE_COLOR
 
 	position_sprite(this)
 	reference_frame(this)
 
+	print_byte(a8__get_sprite_colored(this), 0, 3)
+
+	lda a8__get_sprite_colored(this)
+	cmp #$00
+	beq no_col
 	lda a8__get_sprite_id_mask(this)
-	ora $d01c
-	sta $d01c // C64_SPRITE_MCOLORED
+	ora C64__SPRITE_COLORED // enable
+	jmp !+
+no_col:
+	lda #$ff
+	eor a8__get_sprite_id_mask(this)
+	and C64__SPRITE_COLORED
+!:
+	sta C64__SPRITE_COLORED
 
 	lda a8__get_sprite_id_mask(this)
-	ora $d015
-	sta $d015 // C64_SPRITE_ENABLED
+	ora C64__SPRITE_ENABLED
+	sta C64__SPRITE_ENABLED
 }
 
 .macro hide_sprite(this)
 {
 	lda #$ff
 	eor a8__get_sprite_id_mask(this)
-	and $d015
-	sta $d015 // C64_SPRITE_ENABLED
+	and C64__SPRITE_ENABLED
+	sta C64__SPRITE_ENABLED
 }
 
 .macro position_sprite(this)
@@ -115,7 +127,7 @@
 
 	// todo: add anim
 
-	sta C64_SPRITE_POINTERS,x
+	sta C64__SPRITE_POINTERS, x
 }
 
 .macro tick_sprite(this)
@@ -129,16 +141,16 @@
 // Static methods
 //
 // ------------------------------------------------------------
-.macro set_sprite_col1(val)
+.macro set_sprite_color_1(val)
 {
 	lda #val
-	sta $d025
+	sta C64__SPRITE_COLOR_1
 }
 
-.macro set_sprite_col2(val)
+.macro set_sprite_color_2(val)
 {
 	lda #val
-	sta $d026
+	sta C64__SPRITE_COLOR_2
 }
 
 
@@ -291,14 +303,24 @@
 	.return this + SPRITE__TARGET_VEL_Y
 }
 
-.macro set_sprite_col__i8(this, i8)
+.macro set_sprite_color__i8(this, i8)
 {
-	set__i8(a8__get_sprite_col(this), i8)
+	set__i8(a8__get_sprite_color(this), i8)
 }
 
-.function a8__get_sprite_col(this)
+.function a8__get_sprite_color(this)
 {
-	.return this + SPRITE__COL
+	.return this + SPRITE__COLOR
+}
+
+.macro set_sprite_colored__i8(this, i8)
+{
+	set__i8(a8__get_sprite_colored(this), i8)
+}
+
+.function a8__get_sprite_colored(this)
+{
+	.return this + SPRITE__COLORED
 }
 
 .macro set_sprite_anim__i16(this, i16)

@@ -109,7 +109,7 @@ irq:
 !:
     lda #GREEN
 !:
-    sta ADR_COLOR
+    sta C64__COLOR
 
     print_byte(_num_ticks, 38, 0)
     lda #$31
