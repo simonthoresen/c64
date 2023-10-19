@@ -19,27 +19,31 @@
 	sta C64__SPRITE_ENABLED
 }
 
+_tmp: .byte $00
+
 .macro tick_bird(sprite_id, bird_mask)
 {
-	lda C64__SPRITE_POS + sprite_id
+	lda C64__SPRITE_POS + sprite_id + 0
 	sta C64__SPRITE_POS + sprite_id + 2
 	sta C64__SPRITE_POS + sprite_id + 4
 	sta C64__SPRITE_POS + sprite_id + 6
 
-/*
 	lda #(1 << sprite_id * 4)
 	and C64__SPRITE_POS_UPPER
-	cmp $00
-	beq !+ // no upper
-	lda C64__SPRITE_POS_UPPER
-	eor #bird_mask
-	jmp !++
-!:
+	cmp #$00
+	beq no_upper
+upper_on:
 	lda C64__SPRITE_POS_UPPER
 	ora #bird_mask
+	jmp !+
+no_upper:
+	lda #$ff
+	eor #bird_mask
+	and C64__SPRITE_POS_UPPER
 !:
 	sta C64__SPRITE_POS_UPPER
-*/
+
+
 	lda C64__SPRITE_POS + sprite_id + 1
 	sta C64__SPRITE_POS + sprite_id + 3
 	sta C64__SPRITE_POS + sprite_id + 5

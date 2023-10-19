@@ -3,7 +3,7 @@ _player_spr:
 
 main:
 	clear_screen($20)
-	set_sprite_pos__i16(_player_spr, $0cf0, $0320)//$0180, $0320)
+	set_sprite_pos__i16(_player_spr, $0180, $0320)//$0180, $0320)
 	set_sprite_anim__i16(_player_spr, ANIM_BIRD)
 	set_sprite_id__i8(_player_spr, $00)
 	set_sprite_color__i8(_player_spr, C64__RED)//GREY)
