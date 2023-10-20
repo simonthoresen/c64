@@ -21,9 +21,12 @@
 .label C64__JOY_RIGHT           = %00001000
 .label C64__JOY_FIRE            = %00010000
 .label C64__RASTER_LINE         = $d012
-.label C64__SCREEN_DAT          = $0400
-.label C64__SCREEN_COL          = $d800
-.label C64__SPRITE_COLOR        = $d027
+.label C64__SCREEN_CTRL0        = $d011
+.label C64__SCREEN_CTRL1        = $d016
+.label C64__SCREEN_DATA         = $0400
+.label C64__SCREEN_COLOR        = $d800
+.label C64__SPRITE_COLOR0       = $d027
+.label C64__SPRITE_COLOR        = C64__SPRITE_COLOR0
 .label C64__SPRITE_COLOR1       = $d025
 .label C64__SPRITE_COLOR2       = $d026
 .label C64__SPRITE_COLORED      = $d01c
@@ -150,10 +153,10 @@ no_carry:
     lda #clearByte
     ldx #$00
 !:
-    sta C64__SCREEN_DAT, x
-    sta C64__SCREEN_DAT + $0100, x
-    sta C64__SCREEN_DAT + $0200, x
-    sta C64__SCREEN_DAT + $0300, x
+    sta C64__SCREEN_DATA, x
+    sta C64__SCREEN_DATA + $0100, x
+    sta C64__SCREEN_DATA + $0200, x
+    sta C64__SCREEN_DATA + $0300, x
     inx
     bne !-
 }
@@ -163,10 +166,10 @@ no_carry:
     lda #clearByte
     ldx #$00
 !:
-    sta C64__SCREEN_COL, x
-    sta C64__SCREEN_COL + $0100, x
-    sta C64__SCREEN_COL + $0200, x
-    sta C64__SCREEN_COL + $0300, x
+    sta C64__SCREEN_COLOR, x
+    sta C64__SCREEN_COLOR + $0100, x
+    sta C64__SCREEN_COLOR + $0200, x
+    sta C64__SCREEN_COLOR + $0300, x
     inx
     bne !-  
 }
@@ -217,10 +220,10 @@ letter:
     sbc #$08
 
 !:
-    sta C64__SCREEN_DAT, x
+    sta C64__SCREEN_DATA, x
 
     lda C64__COLOR
-    sta C64__SCREEN_COL, x
+    sta C64__SCREEN_COLOR, x
     rts
 
 } 
