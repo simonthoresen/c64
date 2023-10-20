@@ -220,13 +220,13 @@ same_frame:
 .macro set_sprite_color_1(val)
 {
 	lda #val
-	sta C64__SPRITE_COLOR_1
+	sta C64__SPRITE_COLOR1
 }
 
 .macro set_sprite_color_2(val)
 {
 	lda #val
-	sta C64__SPRITE_COLOR_2
+	sta C64__SPRITE_COLOR2
 }
 
 
