@@ -82,7 +82,6 @@ main_loop:
 	bne !+
 	set_sprite_actual_vel_y__i8s(sprite, $e8)
 !:
-
 	lda #C64__JOY_LEFT
     bit joy
 	bne !+
