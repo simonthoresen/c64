@@ -142,25 +142,6 @@ no_carry:
 
 // ------------------------------------------------------------
 //
-// Wait for the next vertical blank. Good for syncing the main
-// loop to a fixed frequency.
-//
-// ------------------------------------------------------------
-.macro wait_vblank() {
-!:  // in case the raster is on our marker line, we wait for it increment
-    lda C64__RASTER_LINE
-    cmp #$fa
-    beq !- 
-
-!:  // wait for the raster to reach our marker line 
-    lda C64__RASTER_LINE
-    cmp #$fa // line 250
-    bne !-    
-}
-
-
-// ------------------------------------------------------------
-//
 // Fill the screen with a byte or a color.
 //
 // ------------------------------------------------------------

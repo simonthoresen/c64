@@ -150,8 +150,24 @@ irq:
 end:
 }
 
-.macro sync_tick()
+.macro wait_vblank() {
+!:  // in case the raster is on our marker line, we wait for it increment
+    lda C64__RASTER_LINE
+    cmp #$fa
+    beq !- 
+
+!:  // wait for the raster to reach our marker line 
+    lda C64__RASTER_LINE
+    cmp #$fa // line 250
+    bne !-    
+}
+
+.macro sync_tick(cnt)
 {
+    ldx #cnt
+!:
     wait_vblank()
+    dex
+    bpl !-
     inc _num_ticks
 }

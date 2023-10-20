@@ -44,17 +44,15 @@ main:
 	set_sprite_id__i8(_player_2_spr, PLAYER_2_ID)
 	set_sprite_color__i8(_player_2_spr, C64__GREEN)
 	set_sprite_colored__i8(_player_2_spr, $00)
-	set_sprite_tpf__i8(_player_2_spr, $01)
+	set_sprite_tpf__i8(_player_2_spr, $02)
 	set_sprite_target_vel_x__i8s(_player_2_spr, $fa)
 	set_sprite_target_vel_y__i8s(_player_2_spr, $2f)
 	show_sprite(_player_2_spr)
 	show_bird(PLAYER_2_ID, C64__LGREEN)
 
 main_loop:
-	.for (var i = 0; i < 1; i++) {
-	    sync_tick()
-	}
-
+	sync_tick(0)
+	
     tick_sprite(_player_1_spr)
 	tick_bird(PLAYER_1_ID)
 	check_input(_player_1_spr, C64__JOY1)
@@ -62,6 +60,9 @@ main_loop:
     tick_sprite(_player_2_spr)
 	tick_bird(PLAYER_2_ID)
 	check_input(_player_2_spr, C64__JOY2)
+
+	print_byte(a8s__get_sprite_actual_vel_y(_player_2_spr), 10, 0)
+
 
 /*
 	print_byte(a8s__get_sprite_target_vel_x(_player_1_spr), 2, 0)
@@ -80,7 +81,7 @@ main_loop:
 	lda #C64__JOY_FIRE
     bit joy
 	bne !+
-	set_sprite_actual_vel_y__i8s(sprite, $e8)
+	set_sprite_actual_vel_y__i8s(sprite, $d8)
 !:
 	lda #C64__JOY_LEFT
     bit joy
