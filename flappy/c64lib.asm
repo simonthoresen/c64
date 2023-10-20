@@ -3,35 +3,51 @@
 // C64 constants
 //
 // ------------------------------------------------------------
-.label C64__SCREEN_DAT       = $0400
-.label C64__SCREEN_COL       = $d800
-.label C64__COLOR            = $0286
-.label C64__SPRITE_POINTERS  = $07f8
-.label C64__RASTER_LINE      = $d012
-.label C64__SPRITE_COLOR     = $d027
-.label C64__SPRITE_COLOR_1   = $d025
-.label C64__SPRITE_COLOR_2   = $d026
-.label C64__SPRITE_COLORED   = $d01c
-.label C64__SPRITE_ENABLED   = $d015
-.label C64__SPRITE_POS_UPPER = $d010
-.label C64__SPRITE_POS       = $d000
+.label C64__ARG0_LO             = $0002
+.label C64__ARG0_HI             = $0003
+.label C64__ARG0                = C64__ARG0_LO
+.label C64__ARG1_LO             = $0004
+.label C64__ARG1_HI             = $0005
+.label C64__ARG1                = C64__ARG1_LO
+.label C64__ARG2_LO             = $00fb
+.label C64__ARG2_HI             = $00fc
+.label C64__ARG2                = C64__ARG2_LO
+.label C64__COLOR               = $0286
+.label C64__RASTER_LINE         = $d012
+.label C64__SCREEN_DAT          = $0400
+.label C64__SCREEN_COL          = $d800
+.label C64__SPRITE_COLOR        = $d027
+.label C64__SPRITE_COLOR_1      = $d025
+.label C64__SPRITE_COLOR_2      = $d026
+.label C64__SPRITE_COLORED      = $d01c
+.label C64__SPRITE_ENABLED      = $d015
+.label C64__SPRITE_POINTERS     = $07f8
+.label C64__SPRITE_POS          = $d000
+.label C64__SPRITE_POS_UPPER    = $d010
+.label C64__ZEROP_BYTE_1        = $002a
+.label C64__ZEROP_BYTE          = C64__ZEROP_BYTE_1
+.label C64__ZEROP_BYTE_2        = $0052
+.label C64__ZEROP_WORD_LO       = $00fd
+.label C64__ZEROP_WORD_HI       = $00fe
+.label C64__ZEROP_WORD          = C64__ZEROP_WORD_LO
 
-.label C64__BLACK            = $00
-.label C64__WHITE            = $01
-.label C64__RED              = $02
-.label C64__CYAN             = $03
-.label C64__PURPLE           = $04
-.label C64__GREEN            = $05
-.label C64__BLUE             = $06
-.label C64__YELLOW           = $07
-.label C64__ORANGE           = $08
-.label C64__BROWN            = $09
-.label C64__LRED             = $0a
-.label C64__DGREY            = $0b
-.label C64__GREY             = $0c
-.label C64__LGREEN           = $0d
-.label C64__LBLUE            = $0e
-.label C64__LGREY            = $0f
+.label C64__BLACK               = $00
+.label C64__WHITE               = $01
+.label C64__RED                 = $02
+.label C64__CYAN                = $03
+.label C64__PURPLE              = $04
+.label C64__GREEN               = $05
+.label C64__BLUE                = $06
+.label C64__YELLOW              = $07
+.label C64__ORANGE              = $08
+.label C64__BROWN               = $09
+.label C64__LRED                = $0a
+.label C64__DGREY               = $0b
+.label C64__GREY                = $0c
+.label C64__LGREEN              = $0d
+.label C64__LBLUE               = $0e
+.label C64__LGREY               = $0f
+
 
 // ------------------------------------------------------------
 //

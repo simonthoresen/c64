@@ -14,9 +14,9 @@
 .label SPRITE__COLOR = 10
 .label SPRITE__COLORED = 11
 .label SPRITE__ANIM = 12
-.label SPRITE__ANIM_TPF = 14
-.label SPRITE__FRAME = 15
-.label SPRITE__TICK = 16
+.label SPRITE__TPF = 14
+.label SPRITE__TICK = 15
+.label SPRITE__FRAME = 16
 .label SPRITE__NUM_BYTES = 17
 
 
@@ -126,17 +126,48 @@ no_color:
 
 .macro reference_frame(this)
 {
+	set__a16(C64__ZEROP_WORD, a16__get_sprite_anim(this))
+	ldy a8__get_sprite_frame(this)
+
+	clc
+	lda (C64__ZEROP_WORD),y
+	adc #DATA_BLOCK
+
 	ldx a8__get_sprite_id(this)
-	lda #DATA_BLOCK
-
-	// todo: add anim
-
 	sta C64__SPRITE_POINTERS, x
+}
+
+.macro tick_move(this)
+{
+	
+	position_sprite(this)
+}
+
+.macro tick_anim(this) 
+{
+	dec a8__get_sprite_tick(this)
+	bpl same_frame // did not wrap yet
+	lda a8__get_sprite_tpf(this)
+	sta a8__get_sprite_tick(this)
+	inc a8__get_sprite_frame(this)
+
+	set__a16(C64__ZEROP_WORD, a16__get_sprite_anim(this))
+	ldy a8__get_sprite_frame(this)
+	lda (C64__ZEROP_WORD),y
+	cmp #$ff // end of anim
+	bne !+
+	ldy #$00
+	sty a8__get_sprite_frame(this)
+!:
+	reference_frame(this)
+
+same_frame:
 }
 
 .macro tick_sprite(this)
 {
-	position_sprite(this)
+	tick_move(this)
+	tick_anim(this)
 }
 
 
@@ -342,19 +373,19 @@ no_color:
 	.return this + SPRITE__ANIM
 }
 
-.macro set_sprite_anim_tpf__a8(this, a8)
+.macro set_sprite_tpf__a8(this, a8)
 {
-	set__a8(a8__get_sprite_anim_tpf(this), a8)
+	set__a8(a8__get_sprite_tpf(this), a8)
 }
 
-.macro set_sprite_anim_tpf__i8(this, i8)
+.macro set_sprite_tpf__i8(this, i8)
 {
-	set__i8(a8__get_sprite_anim_tpf(this), i8)
+	set__i8(a8__get_sprite_tpf(this), i8)
 }
 
-.function a8__get_sprite_anim_tpf(this)
+.function a8__get_sprite_tpf(this)
 {
-	.return this + SPRITE__ANIM_TPF
+	.return this + SPRITE__TPF
 }
 
 .macro set_sprite_frame__a8(this, a8)
