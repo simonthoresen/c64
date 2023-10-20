@@ -35,7 +35,7 @@ main:
 	set_sprite_colored__i8(_player_1_spr, $00)
 	set_sprite_tpf__i8(_player_1_spr, $04)
 	set_sprite_target_vel_x__i8s(_player_1_spr, $08)
-	set_sprite_target_vel_y__i8s(_player_1_spr, $fa)
+	set_sprite_target_vel_y__i8s(_player_1_spr, $2f)
 	show_sprite(_player_1_spr)
 	show_bird(PLAYER_1_ID, C64__LRED)
 
@@ -46,7 +46,7 @@ main:
 	set_sprite_colored__i8(_player_2_spr, $00)
 	set_sprite_tpf__i8(_player_2_spr, $03)
 	set_sprite_target_vel_x__i8s(_player_2_spr, $fa)
-	set_sprite_target_vel_y__i8s(_player_2_spr, $04)
+	set_sprite_target_vel_y__i8s(_player_2_spr, $2f)
 	show_sprite(_player_2_spr)
 	show_bird(PLAYER_2_ID, C64__LGREEN)
 
@@ -61,6 +61,21 @@ main_loop:
     tick_sprite(_player_2_spr)
 	tick_bird(PLAYER_2_ID)
 
+.const MSK_JOY_UP 				= $01
+.const MSK_JOY_DOWN 			= $02
+.const MSK_JOY_LEFT 			= $04
+.const MSK_JOY_RIGHT 			= $08
+.const MSK_JOY_FIRE 			= $10
+.const ADR_JOY1_STATE			= $dc01
+.const ADR_JOY2_STATE			= $dc00
+
+	lda #MSK_JOY_FIRE
+    bit ADR_JOY1_STATE
+	bne !+
+	set_sprite_actual_vel_y__i8s(_player_1_spr, $ef)
+!:
+
+/*
 	print_byte(a8s__get_sprite_target_vel_x(_player_1_spr), 2, 0)
 	print_byte(a8s__get_sprite_actual_vel_x(_player_1_spr), 2, 1)
 	print_word(a16__get_sprite_pos_x(_player_1_spr), 0, 2)
@@ -68,6 +83,6 @@ main_loop:
 	print_byte(a8s__get_sprite_target_vel_x(_player_2_spr), 12, 0)
 	print_byte(a8s__get_sprite_actual_vel_x(_player_2_spr), 12, 1)
 	print_word(a16__get_sprite_pos_x(_player_2_spr), 10, 2)
-
+*/
 	jmp main_loop
 	
