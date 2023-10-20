@@ -1,51 +1,55 @@
-.macro show_bird(sprite_id, bird_mask, col)
+.macro show_bird(sprite_id, col)
 {	
+	.var mask = (sprite_id == $00) ? $0e : $e0
+
 	lda #C64__BLACK
 	sta C64__SPRITE_COLOR + sprite_id + 1
-	lda #C64__LGREY
+	lda #col
 	sta C64__SPRITE_COLOR + sprite_id + 2
 	lda #C64__YELLOW
 	sta C64__SPRITE_COLOR + sprite_id + 3
 
-	lda $ff
-	eor #bird_mask
+	lda #$ff
+	eor #mask
 	and C64__SPRITE_COLORED
 	sta C64__SPRITE_COLORED
 
-	tick_bird(sprite_id, bird_mask)
+	tick_bird(sprite_id)
 
-	lda #bird_mask
+	lda #mask
 	ora C64__SPRITE_ENABLED
 	sta C64__SPRITE_ENABLED
 }
 
-.macro tick_bird(sprite_id, bird_mask)
+.macro tick_bird(sprite_id)
 {
-	lda C64__SPRITE_POS + sprite_id + 0
-	sta C64__SPRITE_POS + sprite_id + 2
-	sta C64__SPRITE_POS + sprite_id + 4
-	sta C64__SPRITE_POS + sprite_id + 6
+	.var mask = (sprite_id == $00) ? $0e : $e0
 
-	lda #(1 << sprite_id * 4)
+	lda C64__SPRITE_POS + sprite_id * 2 + 0
+	sta C64__SPRITE_POS + sprite_id * 2 + 2
+	sta C64__SPRITE_POS + sprite_id * 2 + 4
+	sta C64__SPRITE_POS + sprite_id * 2 + 6
+
+	lda #(1 << sprite_id)
 	and C64__SPRITE_POS_UPPER
 	cmp #$00
 	beq no_upper
 upper_on:
 	lda C64__SPRITE_POS_UPPER
-	ora #bird_mask
+	ora #mask
 	jmp !+
 no_upper:
 	lda #$ff
-	eor #bird_mask
+	eor #mask
 	and C64__SPRITE_POS_UPPER
 !:
 	sta C64__SPRITE_POS_UPPER
 
 
-	lda C64__SPRITE_POS + sprite_id + 1
-	sta C64__SPRITE_POS + sprite_id + 3
-	sta C64__SPRITE_POS + sprite_id + 5
-	sta C64__SPRITE_POS + sprite_id + 7
+	lda C64__SPRITE_POS + sprite_id * 2 + 1
+	sta C64__SPRITE_POS + sprite_id * 2 + 3
+	sta C64__SPRITE_POS + sprite_id * 2 + 5
+	sta C64__SPRITE_POS + sprite_id * 2 + 7 
 
 	ldx C64__SPRITE_POINTERS + sprite_id
 	inx

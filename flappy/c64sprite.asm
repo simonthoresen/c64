@@ -96,8 +96,8 @@ no_color:
 
 	lda a8__get_sprite_pos_x_hi(this)
 	cmp #$10
-	bcs !+
-	lda $ff // invert id mask to unset upper
+	bcs !+ // a >= %0001000
+	lda #$ff // invert id mask to unset upper
 	eor a8__get_sprite_id_mask(this) 
 	and C64__SPRITE_POS_UPPER 
 	jmp !++
