@@ -80,6 +80,21 @@ main_loop:
 	lda #C64__JOY_FIRE
     bit joy
 	bne !+
-	set_sprite_actual_vel_y__i8s(sprite, $e0)
+	set_sprite_actual_vel_y__i8s(sprite, $e8)
 !:
+
+	lda #C64__JOY_LEFT
+    bit joy
+	bne !+
+	set_sprite_target_vel_x__i8s(sprite, $f1)
+	jmp end
+!:
+	lda #C64__JOY_RIGHT
+    bit joy
+	bne !+
+	set_sprite_target_vel_x__i8s(sprite, $0f)
+	jmp end
+!:
+	set_sprite_target_vel_x__i8s(sprite, $00)
+end:
 }	
