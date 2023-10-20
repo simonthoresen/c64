@@ -139,7 +139,48 @@ no_color:
 
 .macro tick_move(this)
 {
-	
+	// velocity x
+	lda a8s__get_sprite_actual_vel_x(this)
+	cmp a8s__get_sprite_target_vel_x(this)
+	beq on_target_x
+
+	sec
+	sbc a8s__get_sprite_target_vel_x(this)
+	bvc !+
+	eor #$80
+!:
+	bmi below_target_x
+	dec a8s__get_sprite_actual_vel_x(this)
+	jmp on_target_x
+below_target_x:
+	inc a8s__get_sprite_actual_vel_x(this)
+on_target_x:
+
+	add__a16_a8s(a16__get_sprite_pos_x(this),
+		 		 a8s__get_sprite_actual_vel_x(this))
+
+
+	// velocity y
+	lda a8s__get_sprite_actual_vel_y(this)
+	cmp a8s__get_sprite_target_vel_y(this)
+	beq on_target_y
+
+	sec
+	sbc a8s__get_sprite_target_vel_y(this)
+	bvc !+
+	eor #$80
+!:
+	bmi below_target_y
+	dec a8s__get_sprite_actual_vel_y(this)
+	jmp on_target_y
+below_target_y:
+	inc a8s__get_sprite_actual_vel_y(this)
+on_target_y:
+
+	add__a16_a8s(a16__get_sprite_pos_y(this),
+		 		 a8s__get_sprite_actual_vel_y(this))
+
+
 	position_sprite(this)
 }
 

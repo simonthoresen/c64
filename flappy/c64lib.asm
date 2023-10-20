@@ -90,6 +90,16 @@
 no_carry:
 }
 
+.macro add__a16_i8(a16_var, i8_val)
+{
+    clc
+    lda #i8_val
+    adc a16_var
+    sta a16_var
+    lda #$00
+    adc a16_var + 1
+}
+
 .macro add__a16_i8s(a16_var, i8s_val)
 {
     clc
@@ -105,6 +115,23 @@ no_carry:
 !:  adc a16_var + 1
     sta a16_var + 1
 }
+
+.macro add__a16_a8s(a16_var, a8s_val)
+{
+    clc
+    lda a8s_val
+    adc a16_var
+    sta a16_var
+
+    // sign-extend the high byte
+    lda a8s_val
+    and #$80    // extract the sign bit
+    beq !+      // if zero, add #$00 (+carry)
+    lda #$ff    // else, add $ff (+ carry)
+!:  adc a16_var + 1
+    sta a16_var + 1
+}
+
 
 // ------------------------------------------------------------
 //
@@ -169,7 +196,7 @@ no_carry:
 
 .macro print_byte(src, pos_x, pos_y) {
     lda src
-    ldx #pos_y * 40 + pos_x
+    ldx #(pos_y * 40 + pos_x)
     jsr print.byte
 }
 
