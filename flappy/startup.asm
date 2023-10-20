@@ -1,13 +1,41 @@
 BasicUpstart2(startup)
+
+// ------------------------------------------------------------
+//
+// Import program data into known memory.
+//
+// ------------------------------------------------------------
+.label ADR_DATA = $2000
+.label DATA_BLOCK = ADR_DATA/64
+*=ADR_DATA "Program Data"
 #import "data.asm"
 
+
+// ------------------------------------------------------------
+//
+// Import standard libraries and main program.
+//
+// ------------------------------------------------------------
 *=$4000 "Main Program"
 #import "c64lib.asm"
 #import "c64sprite.asm"
 #import "main.asm"
-#import "bird.asm"
 
 
+// ------------------------------------------------------------
+//
+// Declare local variables.
+//
+// ------------------------------------------------------------
+_num_ticks:   .byte $00
+_num_vblanks: .byte $00
+
+
+// ------------------------------------------------------------
+//
+// Implement a generic startup and frame tracker.
+//
+// ------------------------------------------------------------
 startup:
     sei        // disable maskable IRQs
 
@@ -39,7 +67,7 @@ startup:
     lda #>irq
     sta $ffff
 
-    // TODO: init music
+    jsr main_init
 
     cli        // enable maskable interrupts again
     jmp main
@@ -78,6 +106,7 @@ irq:
 !irq:               
 
     count_vblank()
+    jsr main_irq
 
 !irq:
 
@@ -94,7 +123,7 @@ irq:
 
 // ------------------------------------------------------------
 //
-// Sync routines for screen refresh and game loop.
+// Helper macros to track screen refresh and game loop.
 //
 // ------------------------------------------------------------
 .macro count_vblank()

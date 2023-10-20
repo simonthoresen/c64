@@ -1,11 +1,27 @@
-.label PLAYER_1_ID = $00
-.label PLAYER_2_ID = $04
+#import "bird.asm"
 
+// ------------------------------------------------------------
+//
+// Variables
+//
+// ------------------------------------------------------------
 _player_1_spr: 
-	alloc_sprite()
+    alloc_sprite()
 
 _player_2_spr: 
-	alloc_sprite()
+    alloc_sprite()
+
+
+// ------------------------------------------------------------
+//
+// Program
+//
+// ------------------------------------------------------------
+main_init:
+	rts
+
+main_irq:
+	rts
 
 main:
 	clear_screen($20)
