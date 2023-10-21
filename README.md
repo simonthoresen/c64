@@ -5,6 +5,6 @@
 * math: https://github.com/c64lib/common/blob/master/lib/math.asm
 * memory: https://sta.c64.org/cbm64mem.html
 * opcodes: https://c64os.com/post/6502instructions
-* petscii: https://sta.c64.org/cbm64scr.html
+* petscii: https://sta.c64.org/cbm64scr.html, https://www.pagetable.com/c64ref/charset/
 * spritemate: https://www.awsm.de/spritemate/
 * zeropage: https://www.c64-wiki.com/wiki/Zeropage
