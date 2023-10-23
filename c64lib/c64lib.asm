@@ -226,21 +226,42 @@ no_carry:
 // ------------------------------------------------------------
 .macro enter_irq()
 {
-    pha
+    // Being all kernal irq handlers switched off we have to do more work by ourselves.
+    // When an interrupt happens the CPU will stop what its doing, store the status and return address
+    // into the stack, and then jump to the interrupt routine. It will not store other registers, and if
+    // we destroy the value of A/X/Y in the interrupt routine, then when returning from the interrupt to
+    // what the CPU was doing will lead to unpredictable results (most probably a crash). So we better
+    // store those registers, and restore their original value before reentering the code the CPU was
+    // interrupted running.
+
+    // If you won't change the value of a register you are safe to not to store / restore its value.
+    // However, it's easy to screw up code like that with later modifying it to use another register too
+    // and forgetting about storing its state.
+
+    // The method shown here to store the registers is the most orthodox and most failsafe.
+
+    pha                 // store register A in stack
     txa
-    pha
+    pha                 // store register X in stack
     tya
-    pha
-    lda #$ff // this is the orthodox and safe way of clearing the interrupt condition of the VICII.
-    sta C64__IRQ_CTRL
+    pha                 // store register Y in stack
+
+    lda #$ff            // this is the orthodox and safe way of clearing the interrupt condition of the VICII.
+    sta C64__IRQ_CTRL   // if you don't do this the interrupt condition will be present all the time and you end
+                        // up having the CPU running the interrupt code all the time, as when it exists the
+                        // interrupt, the interrupt request from the VICII will be there again regardless of the
+                        // rasterline counter.
+
+                        // it's pretty safe to use inc $d019 (or any other rmw instruction) for brevity, they
+                        // will only fail on hardware like c65 or supercpu. c64dtv is ok with this though.
 }
 
 .macro register_irq(i8_line, i16_irq)
 {
-    lda #i8_line   // this is how to tell at which rasterline we want the irq to be triggered
+    lda #i8_line        // this is how to tell at which rasterline we want the irq to be triggered
     sta C64__RASTER_LINE
-    lda #<i16_irq  // this is how we set up
-    sta C64__IRQ_LO  // the address of our interrupt code
+    lda #<i16_irq       // this is how we set up
+    sta C64__IRQ_LO     // the address of our interrupt code
     lda #>i16_irq
     sta C64__IRQ_HI
 }
@@ -248,10 +269,10 @@ no_carry:
 .macro leave_irq()
 {
     pla
-    tay
+    tay                 // restore register Y from stack (remember stack is FIFO: First In First Out)
     pla
-    tax
-    pla
+    tax                 // restore register X from stack
+    pla                 // restore register A from stack
 }
 
 
