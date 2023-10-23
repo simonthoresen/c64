@@ -13,6 +13,9 @@
 .label C64__ARG2_HI             = $00fc
 .label C64__ARG2                = C64__ARG2_LO
 .label C64__COLOR               = $0286
+.label C64__IRQ_CTRL            = $d019
+.label C64__IRQ_LO              = $fffe
+.label C64__IRQ_HI              = $ffff
 .label C64__JOY1                = $dc01
 .label C64__JOY2                = $dc00
 .label C64__JOY_UP              = %00000001
@@ -175,6 +178,42 @@ no_carry:
     sta C64__SCREEN_COLOR + $0300, x
     inx
     bne !-  
+}
+
+
+// ------------------------------------------------------------
+//
+// Interrupt request service helpers.
+//
+// ------------------------------------------------------------
+.macro enter_irq()
+{
+    pha
+    txa
+    pha
+    tya
+    pha
+    lda #$ff // this is the orthodox and safe way of clearing the interrupt condition of the VICII.
+    sta C64__IRQ_CTRL
+}
+
+.macro register_irq(i8_line, i16_irq)
+{
+    lda #i8_line   // this is how to tell at which rasterline we want the irq to be triggered
+    sta C64__RASTER_LINE
+    lda #<i16_irq  // this is how we set up
+    sta C64__IRQ_LO  // the address of our interrupt code
+    lda #>i16_irq
+    sta C64__IRQ_HI
+}
+
+.macro leave_irq()
+{
+    pla
+    tay
+    pla
+    tax
+    pla
 }
 
 

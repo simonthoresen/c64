@@ -1,14 +1,6 @@
 main_init:
 	sei
-	
-	lda #$00   // this is how to tell at which rasterline we want the irq to be triggered
-    sta $d012
-
-    lda #<irq1  // this is how we set up
-    sta $fffe  // the address of our interrupt code
-    lda #>irq1
-    sta $ffff
-
+	register_irq($00, irq1)
 	cli
 	rts
 
@@ -18,22 +10,10 @@ main_irq:
 _x: .byte $00
 
 irq1:
-	pha
-	txa
-	pha
-	tya
-	pha
-	lda #$ff   // this is the orthodox and safe way of clearing the interrupt condition of the VICII.
-    sta $d019
+	enter_irq()
+	register_irq($3a, irq2)
 
-	lda #$3a   // this is how to tell at which rasterline we want the irq to be triggered
-    sta $d012
-    lda #<irq2  // this is how we set up
-    sta $fffe  // the address of our interrupt code
-    lda #>irq2
-    sta $ffff
-
-count_vblank()
+	count_vblank()
 
     lda _x
     cmp #$00
@@ -50,38 +30,18 @@ count_vblank()
 	ora _x
 	sta C64__SCREEN_CTRL2
 
-	pla
-	tay
-	pla
-	tax
-	pla
+	leave_irq()
 	rti
 
 irq2:
-	pha
-	txa
-	pha
-	tya
-	pha
-	lda #$ff
-    sta $d019
-
-	lda #$00 
-    sta $d012
-    lda #<irq1
-    sta $fffe
-    lda #>irq1
-    sta $ffff
+	enter_irq()
+	register_irq($00, irq1)
 
     lda C64__SCREEN_CTRL2
     and #%11111000
     sta C64__SCREEN_CTRL2
 
-	pla
-	tay
-	pla
-	tax
-	pla
+    leave_irq()
 	rti
 
 
@@ -91,12 +51,11 @@ main:
 	ora #%00010000 // multicolor
 	sta C64__SCREEN_CTRL1
 */
-/*
+
 	lda C64__MEM_SETUP
 	and #%11110001
 	ora #%00001010 // $2800-$2fff
 	sta C64__MEM_SETUP
-*/
 
     lda #$00
     ldx #$00
@@ -154,9 +113,6 @@ hard:
 	pla
 	sta C64__SCREEN_DATA + $0027 + $28*y
 }
-
-
-
 
 	jmp main_loop
 
