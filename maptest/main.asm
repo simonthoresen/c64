@@ -24,23 +24,16 @@ irq1:
 	lda #$07
 	sta _x
 !:
-
-	lda C64__SCREEN_CTRL2
-	and #%11111000
-	ora _x
-	sta C64__SCREEN_CTRL2
-
+	scroll_screen_x_a8(_x)
+	scroll_screen_y_i8($03)
 	leave_irq()
 	rti
 
 irq2:
 	enter_irq()
 	register_irq($00, irq1)
-
-    lda C64__SCREEN_CTRL2
-    and #%11111000
-    sta C64__SCREEN_CTRL2
-
+	scroll_screen_x_i8($00)
+	scroll_screen_y_a8(_x)
     leave_irq()
 	rti
 
@@ -99,21 +92,17 @@ main_loop:
 	bne main_loop
 
 hard:
-.for(var y = 0; y < 25; y++) {
-
-	lda C64__SCREEN_DATA + $0000 + $28*y
+	lda C64__SCREEN_DATA + $0000
 	pha
 	ldx #$00
 !:
-	lda C64__SCREEN_DATA + $0001 + $28*y, x
-	sta C64__SCREEN_DATA + $0000 + $28*y, x
+	lda C64__SCREEN_DATA + $0001, x
+	sta C64__SCREEN_DATA + $0000, x
 	inx
 	cpx #$27
 	bne !-
 	pla
-	sta C64__SCREEN_DATA + $0027 + $28*y
-}
-
+	sta C64__SCREEN_DATA + $0027
 	jmp main_loop
 
 

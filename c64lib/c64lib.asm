@@ -183,6 +183,44 @@ no_carry:
 
 // ------------------------------------------------------------
 //
+// Screen scrolling.
+//
+// ------------------------------------------------------------
+.macro scroll_screen_x_a8(a8)
+{
+    lda C64__SCREEN_CTRL2    
+    and #%11111000
+    ora a8
+    sta C64__SCREEN_CTRL2
+}
+
+.macro scroll_screen_x_i8(i8)
+{
+    lda C64__SCREEN_CTRL2    
+    and #%11111000
+    ora #i8
+    sta C64__SCREEN_CTRL2
+}
+
+.macro scroll_screen_y_a8(a8)
+{
+    lda C64__SCREEN_CTRL1
+    and #%11111000
+    ora a8
+    sta C64__SCREEN_CTRL1
+}
+
+.macro scroll_screen_y_i8(i8)
+{
+    lda C64__SCREEN_CTRL1    
+    and #%11111000
+    ora #i8
+    sta C64__SCREEN_CTRL1
+}
+
+
+// ------------------------------------------------------------
+//
 // Interrupt request service helpers.
 //
 // ------------------------------------------------------------
