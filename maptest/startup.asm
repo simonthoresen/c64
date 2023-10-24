@@ -13,16 +13,12 @@ main:
 	sta C64__SCREEN_CTRL2
 
 
-	.const COLR_VIC_BG0 = 0
-	.const COLR_VIC_BG1 = 14
-	.const COLR_VIC_BG2 = 6
-	lda #COLR_VIC_BG0
-	sta $d021
-	lda #COLR_VIC_BG1
-	sta $d022
-	lda #COLR_VIC_BG2
-	sta $d023
-
+	lda #$00
+	sta C64__COLOR_BG0
+	lda #$0e
+	sta C64__COLOR_BG1
+	lda #$06
+	sta C64__COLOR_BG2
 
 
 	lda C64__MEM_SETUP
@@ -75,20 +71,31 @@ main_loop:
 	bne main_loop
 
 hard:
-	lda C64__SCREEN_DATA + $0000
+.for (var i = 0; i < 25; i++) {
+
+	lda C64__SCREEN_DATA + $0000 + 40*i
 	pha
 	ldx #$00
 !:
-	lda C64__SCREEN_DATA + $0001, x
-	sta C64__SCREEN_DATA + $0000, x
+	lda C64__SCREEN_DATA + $0001 + 40*i, x
+	sta C64__SCREEN_DATA + $0000 + 40*i, x
+    tay
+    lda $3000,y // char color
+    and #$0f
+    sta C64__SCREEN_COLOR + $0000 + 40*i,x	
+
 	inx
 	cpx #$27
 	bne !-
 	pla
-	sta C64__SCREEN_DATA + $0027
+	sta C64__SCREEN_DATA + $0027 + 40*i
+    tay
+    lda $3000,y // char color
+    and #$0f
+    sta C64__SCREEN_COLOR + $0027 + 40*i,x	
+
+}
 	jmp main_loop
-
-
 
 _x: .byte $00
 
