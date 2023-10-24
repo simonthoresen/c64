@@ -17,8 +17,8 @@
 .label SPRITE__TPF = 14
 .label SPRITE__TICK = 15
 .label SPRITE__FRAME = 16
-.label SPRITE__NUM_BYTES = 17
-
+.label SPRITE__DATA_BLOCK = 17
+.label SPRITE__NUM_BYTES = 18
 
 // ------------------------------------------------------------
 //
@@ -131,7 +131,7 @@ no_color:
 
 	clc
 	lda (C64__ZEROP_WORD),y
-	adc #DATA_BLOCK
+	adc a8__get_sprite_data_block(this)
 
 	ldx a8__get_sprite_id(this)
 	sta C64__SPRITE_POINTERS, x
@@ -457,5 +457,20 @@ same_frame:
 .function a8__get_sprite_tick(this)
 {
 	.return this + SPRITE__TICK
+}
+
+.macro set_sprite_data_block__a8(this, a8)
+{
+	set__a8(a8__get_sprite_data_block(this), a8)
+}
+
+.macro set_sprite_data_block__i8(this, i8)
+{
+	set__i8(a8__get_sprite_data_block(this), i8)
+}
+
+.function a8__get_sprite_data_block(this)
+{
+	.return this + SPRITE__DATA_BLOCK
 }
 
