@@ -5,8 +5,8 @@ BasicUpstart2(startup)
 #import "data.asm"
 
 *=$4000 "Main Program"
-#import "c64lib.asm"
-#import "c64tick.asm"
+#import "../c64lib/c64lib.asm"
+#import "../c64lib/c64tick.asm"
 #import "bird.asm"
 
 // ------------------------------------------------------------

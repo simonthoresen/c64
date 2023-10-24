@@ -1,5 +1,5 @@
 BasicUpstart2(startup)
-#import "c64lib.asm"
+#import "../c64lib/c64lib.asm"
 #import "data.asm"
 
 startup:
