@@ -5,48 +5,10 @@ BasicUpstart2(startup)
 *=$4000 "Main Program"
 startup:
 	enter_startup()
-	//setup_irq($00, irq1)
+	setup_irq($00, irq1)
 	leave_startup()
 
 main:
-	jsr scroll_walls
-
-	ldx _walls_head
-	ldy #$00
-!:
-	lda _walls_data, x
-	and #%00001111
-	clc 
-	adc #'0'
-	sta C64__SCREEN_DATA, y
-
-	lda _walls_data, x
-	lsr
-	lsr
-	lsr
-	lsr
-	clc 
-	adc #'0'
-	sta C64__SCREEN_DATA + $28, y
-
-	// increment wall buf ptr
-	inx
-	txa 
-	and #%00111111
-	tax
-
-	// increment screen pos
-	iny
-	cpy #$28
-	bne !-
-
-	wait_vblank()
-	wait_vblank()
-	wait_vblank()
-	wait_vblank()
-	jmp main
-
-_main:
 	lda C64__SCREEN_CTRL2
 	ora #%00010000 // multicolor
 	sta C64__SCREEN_CTRL2
@@ -83,29 +45,23 @@ _main:
     bne !-
 
 main_loop:
+	// color border so that white means we use cpu, black means we idle
+	// for there to be smooth scrolling, the cpu needs to be released before 
+	// the rastering begins
 	lda #$00
 	sta C64__COLOR_BORDER
 	wait_vblank()
 	lda #$01
 	sta C64__COLOR_BORDER
-/*
-	dec C64__SCREEN_CTRL2
-	lda C64__SCREEN_CTRL2
-	and #$07
-	cmp #$00
-	bne main_loop
 
-	lda #$07
-	ora C64__SCREEN_CTRL2
-	sta C64__SCREEN_CTRL2
-*/
-	lda _x
-	cmp #$00
+	dec _scroll_x
+	lda _scroll_x
+	and #%00000111
+	cmp #%00000111
 	bne main_loop
 
 hard:
-
-
+	jsr scroll_walls
 
 .for (var i = 1; i < 25; i++) {
 
@@ -133,7 +89,40 @@ hard:
 }
 	jmp main_loop
 
-_x: .word $00
+_scroll_x: .word $00
+
+
+.macro print_walls()
+{
+	ldx _walls_head
+	ldy #$00
+!:
+	lda _walls_data, x
+	and #%00001111
+	clc 
+	adc #'0'
+	sta C64__SCREEN_DATA, y
+
+	lda _walls_data, x
+	lsr
+	lsr
+	lsr
+	lsr
+	clc 
+	adc #'0'
+	sta C64__SCREEN_DATA + $28, y
+
+	// increment wall buf ptr
+	inx
+	txa 
+	and #%00111111
+	tax
+
+	// increment screen pos
+	iny
+	cpy #$28
+	bne !-
+}
 
 
 _walls_data: .fill $40, $00 // 64 bytes cyclic buffer
@@ -199,19 +188,7 @@ irq1:
 irq2:
 	enter_irq()
 	setup_irq($00, irq1)
-
-	//count_vblank()
-
-    lda _x
-    cmp #$00
-    beq !+
-    dec _x
-    jmp !++
-!:
-	lda #$07
-	sta _x
-!:
-	scroll_screen_x_a8(_x)
+	scroll_screen_x_a8(_scroll_x)
     leave_irq()
 	rti
 
