@@ -10,26 +10,34 @@ startup:
 
 main:
 	jsr scroll_walls
-	ldx #$00
+
+	ldx _walls_head
+	ldy #$00
 !:
-	lda _walls_buf, x
+	lda _walls_data, x
 	and #%00001111
 	clc 
 	adc #'0'
-	sta C64__SCREEN_DATA, x
+	sta C64__SCREEN_DATA, y
 
-	lda _walls_buf, x
+	lda _walls_data, x
 	lsr
 	lsr
 	lsr
 	lsr
 	clc 
 	adc #'0'
-	sta C64__SCREEN_DATA + $28, x
+	sta C64__SCREEN_DATA + $28, y
 
-
+	// increment wall buf ptr
 	inx
-	cpx #$28
+	txa 
+	and #%00111111
+	tax
+
+	// increment screen pos
+	iny
+	cpy #$28
 	bne !-
 
 	wait_vblank()
@@ -128,28 +136,37 @@ hard:
 _x: .word $00
 
 
-_walls_buf: .fill $40, $00 // 64 bytes cyclic buffer
-_walls_idx: .byte $00 // pointer to slot 0 in buffer
-_wall_seed: alloc_seed()
+_walls_data: .fill $40, $00 // 64 bytes cyclic buffer
+_walls_head: .byte $00 // pointer to slot 0 in buffer
+_walls_seed: alloc_seed()
 
 // extend current wall segment (bit 4+5)
 // bits 0-1; running counter of current segment (air or wall), value 0-3
 // bits 0-3; running counter of current block (consists of 1x wall and 3x air), value 0-16
 // bits 4-7; height of wall in current block, value 0-16
 scroll_walls:
-	// store current buffer-index in x
-	lda _walls_idx
-	and #%00111111 // count 0-63
-	tax
+	// increment the head-pointer of the walls
+	inc _walls_head
+	lda _walls_head
+	and #%00111111
+	sta _walls_head
 
-	// move index forward and store next in y
-	inc _walls_idx
-	lda _walls_idx
+	// store the new tail-pointer in y
+	ldy _walls_head
+	dey 
+	tya
 	and #%00111111
 	tay
 
+	// store the old tail-pointer in x
+	tax
+	dex
+	txa
+	and #%00111111
+	tax
+
 	// read out the wall in prev and prepare next
-	lda _walls_buf, x
+	lda _walls_data, x
 	clc
 	adc #$01
 	and #%00001111 // keep lower nibble / block index
@@ -157,16 +174,16 @@ scroll_walls:
 	cmp #$00 // end of segment
 	beq create_wall
 extend_wall:
-	lda _walls_buf, x
+	lda _walls_data, x
 	jmp !+
 create_wall:
-	lda_rand(_wall_seed)
+	lda_rand(_walls_seed)
 	sta C64__SCREEN_DATA + $50
 	// fall through	
 !:
 	and #%11110000 // keep upper nibble of wall
 	ora C64__ZEROP_BYTE // join with lower nibble counter
-	sta _walls_buf, y
+	sta _walls_data, y
 	rts
 
 
