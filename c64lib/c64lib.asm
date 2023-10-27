@@ -402,3 +402,23 @@ letter:
     rts
 
 } 
+
+
+// ------------------------------------------------------------
+//
+// 8-bit random number generator.
+//
+// ------------------------------------------------------------
+.macro alloc_seed() 
+{
+	.byte $14
+}
+
+.macro lda_rand(seed)
+{
+    lda seed
+    asl
+    bcc !+
+    eor #$1d
+!:  sta seed
+}

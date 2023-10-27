@@ -68,18 +68,6 @@ main_loop:
 	tick_bird(PLAYER_2_ID)
 	check_input(_player_2_spr, C64__JOY2)
 
-	print_byte(a8s__get_sprite_actual_vel_y(_player_2_spr), 10, 0)
-
-
-/*
-	print_byte(a8s__get_sprite_target_vel_x(_player_1_spr), 2, 0)
-	print_byte(a8s__get_sprite_actual_vel_x(_player_1_spr), 2, 1)
-	print_word(a16__get_sprite_pos_x(_player_1_spr), 0, 2)
-
-	print_byte(a8s__get_sprite_target_vel_x(_player_2_spr), 12, 0)
-	print_byte(a8s__get_sprite_actual_vel_x(_player_2_spr), 12, 1)
-	print_word(a16__get_sprite_pos_x(_player_2_spr), 10, 2)
-*/
 	jmp main_loop
 
 

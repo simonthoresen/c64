@@ -1,6 +1,9 @@
 BasicUpstart2(startup)
 #import "../c64lib/c64lib.asm"
 
+_seed: 
+    alloc_seed()
+
 startup:
 	do_startup()
 
@@ -8,7 +11,7 @@ main:
 	ldx #$00
 !:
 .for (var i = 0; i < 4; i++) {
-	jsr rand
+	lda_rand(_seed)
     sta C64__SCREEN_DATA + $0100*i, x
 }
 	inx    
@@ -17,11 +20,3 @@ main:
 	jmp *
 
 
-seed: .byte $14
-rand:
-    lda seed
-    asl
-    bcc !+
-    eor #$1d
-!:  sta seed
-	rts
