@@ -8,7 +8,7 @@ _scroll:
 
 startup:
 	enter_startup()
-	setup_irq($00, irq)
+	setup_irq($00, irq0)
 	leave_startup()
 
 main:
@@ -42,21 +42,80 @@ main_loop:
 	bne main_loop
 }
 
-.for (var i = 0; i < 4; i++) 
-{    
-    ldx #$00
-!:  lda C64__SCREEN_DATA + $0001 + i * $0100, x
-    sta C64__SCREEN_DATA + $0000 + i * $0100, x
-    inx
-    cpx #$00
-    bne !-
-}
 	jmp main_loop
 
 
-irq:
+irq0:
 	enter_irq()
-	scroll_screen_x_a8(_scroll)
+	scroll_screen_x_i8($07)
+    left_scroll_8th(0)
+	setup_irq($00, irq1)
 	leave_irq()
 	rti
 
+irq1:
+	enter_irq()
+	scroll_screen_x_i8($06)
+    left_scroll_8th(1)
+	setup_irq($00, irq2)
+	leave_irq()
+	rti
+
+irq2:
+	enter_irq()
+	scroll_screen_x_i8($05)
+    left_scroll_8th(2)
+	setup_irq($00, irq3)
+	leave_irq()
+	rti
+
+irq3:
+	enter_irq()
+	scroll_screen_x_i8($04)
+    left_scroll_8th(3)
+	setup_irq($00, irq4)
+	leave_irq()
+	rti
+
+irq4:
+	enter_irq()
+	scroll_screen_x_i8($03)
+    left_scroll_8th(4)
+	setup_irq($00, irq5)
+	leave_irq()
+	rti
+
+irq5:
+	enter_irq()
+	scroll_screen_x_i8($02)
+    left_scroll_8th(5)
+	setup_irq($00, irq6)
+	leave_irq()
+	rti
+
+irq6:
+	enter_irq()
+	scroll_screen_x_i8($01)
+    left_scroll_8th(6)
+	setup_irq($00, irq7)
+	leave_irq()
+	rti
+
+irq7:
+	enter_irq()
+	scroll_screen_x_i8($00)
+    left_scroll_8th(7)
+	setup_irq($00, irq0)
+	leave_irq()
+	rti
+
+
+.macro left_scroll_8th(row)
+{
+    ldx #$00
+!:  lda C64__SCREEN_DATA + $0001 + row * $80, x
+    sta C64__SCREEN_DATA + $0000 + row * $80, x
+    inx
+    cpx #$80 // 128
+    bne !-
+}

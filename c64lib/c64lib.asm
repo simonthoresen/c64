@@ -268,6 +268,18 @@ no_carry:
     sta C64__SCREEN_CTRL2
 }
 
+.macro scroll_screen_x_i8(i8)
+{    
+    lda C64__SCREEN_CTRL2    
+    and #%11111000
+    sta C64__SCREEN_CTRL2    
+
+    lda #i8
+    and #%00000111
+    ora C64__SCREEN_CTRL2
+    sta C64__SCREEN_CTRL2
+}
+
 .macro scroll_screen_y_a8(a8)
 {
     lda C64__SCREEN_CTRL1
@@ -316,6 +328,9 @@ no_carry:
 
                         // it's pretty safe to use inc $d019 (or any other rmw instruction) for brevity, they
                         // will only fail on hardware like c65 or supercpu. c64dtv is ok with this though.
+
+	lda #$02
+	sta C64__COLOR_BORDER
 }
 
 .macro setup_irq(i8_line, i16_irq)
@@ -334,6 +349,9 @@ no_carry:
 
 .macro leave_irq()
 {
+	lda #$00
+	sta C64__COLOR_BORDER
+
     pla
     tay                 // restore register Y from stack (remember stack is FIFO: First In First Out)
     pla
