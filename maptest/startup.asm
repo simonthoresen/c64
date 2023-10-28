@@ -2,8 +2,8 @@ BasicUpstart2(startup)
 #import "../c64lib/c64lib.asm"
 #import "data.asm"
 
-.const WALL_L = $0f
-.const WALL_R = $10
+.const BEAM_L = $0f
+.const BEAM_R = $10
 .const WALL_UL = $77
 .const WALL_UC = $78
 .const WALL_UR = $79
@@ -15,7 +15,7 @@ BasicUpstart2(startup)
 .const WALL_BR = $76
 
 _scroll_x: 		.word $00
-_walls_data: 	.fill $40, $00 // 64 bytes cyclic buffer
+_walls_data: 	.fill $40, %00001100 // 64 bytes cyclic buffer
 _walls_head:	.byte $00 // pointer to slot 0 in buffer
 _walls_seed: 	alloc_seed()
 
@@ -23,31 +23,14 @@ _walls_seed: 	alloc_seed()
 *=$4000 "Main Program"
 startup:
 	enter_startup()
-	//setup_irq($00, irq1)
+	setup_irq($00, irq1)
 	leave_startup()
 
 main:
-/*
-	lda C64__SCREEN_CTRL2
-	ora #%00010000 // multicolor
-	sta C64__SCREEN_CTRL2
+	setup_charset()
+	clear_screen($00)
+	//draw_level()
 
-
-	lda #$00
-	sta C64__COLOR_BG0
-	lda #$0e
-	sta C64__COLOR_BG1
-	lda #$06
-	sta C64__COLOR_BG2
-
-
-	lda C64__MEM_SETUP
-	and #%11110001
-	ora #%00001010 // $2800-$2fff
-	sta C64__MEM_SETUP
-
-	draw_level()
-*/
 main_loop:
 	// color border so that white means we use cpu, black means we idle for
 	// there to be smooth scrolling, the cpu needs to be released before 
@@ -60,27 +43,103 @@ main_loop:
 
 	// perform smooth scroll until we are ready to hard scroll the
 	// screen data
+.if (false) {
 	dec _scroll_x
 	lda _scroll_x
 	and #%00000111
 	cmp #%00000111
 	bne main_loop
+}
 
 hard:
 	jsr scroll_walls
-	//1a: print_walls()
-	//1b: shift_screen()
+//	print_walls()
+//  shift_screen()
+
+	// run from left to right
+	// consider the current segment (16 columns), aka lower nibble
+	// if in the first 4 columns (upper 2 bits of nibble is empty), we have a wall
+	// the start of the wall is given by upper nibble
+	// the length of the wall is always 25 - 2 (border) - 16 (start) = 7
+	lda _walls_head
+	sta C64__ZEROP_BYTE1
+	lda #$00
+	sta C64__ZEROP_BYTE2
+
+!:
+	ldy C64__ZEROP_BYTE2
+	ldx C64__ZEROP_BYTE1
+	lda _walls_data, x
+	and #%00001111
+	// todo: clever layout of the below memory so that
+	// todo: we can simply jump based on value of acc	
+	cmp #$00
+	beq wall_lhs
+	cmp #$01
+	beq wall_mid
+	cmp #$02
+	beq wall_mid
+	cmp #$03
+	beq wall_rhs
+	cmp #$04
+	beq wall_clr
+	jmp wall_end
+
+wall_lhs:
+	lda _walls_data, x
+	lsr
+	lsr
+	lsr
+	lsr
+	
+	lda #WALL_UL
+	sta C64__SCREEN_DATA + $28*5, y	
+	lda $3000 + WALL_UL
+	and #$0f
+	sta C64__SCREEN_COLOR + $28*5, y
+	jmp wall_end
+
+wall_mid:
+	lda #WALL_UC
+	sta C64__SCREEN_DATA + $28*5, y	
+	lda $3000 + WALL_UC
+	and #$0f
+	sta C64__SCREEN_COLOR + $28*5, y
+	jmp wall_end
+
+wall_rhs:
+	lda #WALL_UR
+	sta C64__SCREEN_DATA + $28*5, y	
+	lda $3000 + WALL_UR
+	and #$0f
+	sta C64__SCREEN_COLOR + $28*5, y
+	jmp wall_end
+
+wall_clr:
+	lda #$00
+	sta C64__SCREEN_DATA + $28*5, y	
+	jmp wall_end
+
+wall_end:
 
 
+	// increment wall buf ptr
+	inc C64__ZEROP_BYTE1
+	lda C64__ZEROP_BYTE1
+	and #%00111111
+	sta C64__ZEROP_BYTE1
 
+	// increment screen pos
+	inc C64__ZEROP_BYTE2
+	lda C64__ZEROP_BYTE2
+	cmp #$28
+	bne !-
 
 	jmp main_loop
 
 
-// extend current wall segment (bit 4+5)
-// bits 0-1; running counter of current segment (air or wall), value 0-3
-// bits 0-3; running counter of current block (consists of 1x wall and 3x air), value 0-16
-// bits 4-7; height of wall in current block, value 0-16
+// bits 0-3; running counter of current segment, value 0-16
+// bits 4-7; height of wall in current segment, value 0-16
 scroll_walls:
 	// increment the head-pointer of the walls
 	inc _walls_head
@@ -137,6 +196,33 @@ irq2:
     leave_irq()
 	rti
 
+
+_screen_data_row:
+	.fill 25, C64__SCREEN_DATA + $28 * i
+_screen_color_row:
+	.fill 25, C64__SCREEN_COLOR + $28 * i
+
+
+.macro setup_charset()
+{
+	lda C64__SCREEN_CTRL2
+	ora #%00010000 // multicolor
+	sta C64__SCREEN_CTRL2
+
+
+	lda #$00
+	sta C64__COLOR_BG0
+	lda #$0e
+	sta C64__COLOR_BG1
+	lda #$06
+	sta C64__COLOR_BG2
+
+
+	lda C64__MEM_SETUP
+	and #%11110001
+	ora #%00001010 // $2800-$2fff
+	sta C64__MEM_SETUP
+}
 
 .macro shift_screen()
 {
