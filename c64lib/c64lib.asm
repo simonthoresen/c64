@@ -257,18 +257,14 @@ no_carry:
 //
 // ------------------------------------------------------------
 .macro scroll_screen_x_a8(a8)
-{
+{    
     lda C64__SCREEN_CTRL2    
     and #%11111000
-    ora a8
-    sta C64__SCREEN_CTRL2
-}
+    sta C64__SCREEN_CTRL2    
 
-.macro scroll_screen_x_i8(i8)
-{
-    lda C64__SCREEN_CTRL2    
-    and #%11111000
-    ora #i8
+    lda a8
+    and #%00000111
+    ora C64__SCREEN_CTRL2
     sta C64__SCREEN_CTRL2
 }
 
@@ -276,15 +272,11 @@ no_carry:
 {
     lda C64__SCREEN_CTRL1
     and #%11111000
-    ora a8
     sta C64__SCREEN_CTRL1
-}
 
-.macro scroll_screen_y_i8(i8)
-{
-    lda C64__SCREEN_CTRL1    
-    and #%11111000
-    ora #i8
+    lda a8
+    and #%00000111
+    ora C64__SCREEN_CTRL1
     sta C64__SCREEN_CTRL1
 }
 
