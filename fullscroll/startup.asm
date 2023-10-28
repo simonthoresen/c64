@@ -1,6 +1,19 @@
 BasicUpstart2(startup)
 #import "../c64lib/c64lib.asm"
 
+
+/*
+ * Split the screen into 4 horizontal sections (e.g. 6 rows each).
+ *
+ * Stagger the horizontal fine scroll offsets by 2 pixels per section (compared to the section above) 
+ * using raster interrupts with accurate delays timing delays.
+ *
+ * Scroll the horizontal fine scroll register every frame, offset by 2 for each section
+ * 
+ * Only scroll the screen and color memory for 1 section at a time (when your fine scroll wraps
+ * around for that section).
+ */
+
 _seed: 
     alloc_seed()
 _scroll:
