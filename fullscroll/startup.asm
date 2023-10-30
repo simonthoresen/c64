@@ -1,30 +1,12 @@
 BasicUpstart2(startup)
 #import "../c64lib/c64lib.asm"
 
-
-/*
- * 40x25
- * 0: score
- * 1: ceiling
- * 2-23: 6 + 5 + 5 + 6
- * 2 + 3 + 3 + 3 + 3 + 3 + 3 + 2
- * 24: floor
- * 
- * Split the screen into 4 horizontal sections (e.g. 6 rows each).
- *
- * Stagger the horizontal fine scroll offsets by 2 pixels per section (compared to the section above) 
- * using raster interrupts with accurate delays timing delays.
- *
- * Scroll the horizontal fine scroll register every frame, offset by 2 for each section
- * 
- * Only scroll the screen and color memory for 1 section at a time (when your fine scroll wraps
- * around for that section).
- */
-
 _seed: 
     alloc_seed()
-_world_x16:
-    .word $ffff
+_world_x:
+    .byte $ff
+_walls:
+	.byte $00
 _frame:
 	.byte $00
 _title:
@@ -51,7 +33,7 @@ main_loop:
 
 	// perform smooth scroll until we are ready to hard scroll the
 	// screen data
-	inc__a16(_world_x16)
+	inc _world_x
 	left_scroll_on($00, 02, 2)
 	left_scroll_on($01, 04, 3)
 	left_scroll_on($02, 07, 3)
@@ -62,17 +44,17 @@ main_loop:
 	left_scroll_on($07, 22, 2)
 	jmp main_loop
 
-.macro left_scroll_on(when, row, num_rows)
+.macro left_scroll_on(band, row, num_rows)
 {
-	lda _world_x16
+	lda _world_x
 	and #$07 // isolate lower 3 bits
-	cmp #when
+	cmp #band
 	bne !+
-	left_scroll(row, num_rows)
+	left_scroll(band, row, num_rows)
 !:
 }
 
-.macro left_scroll(row, num_rows)
+.macro left_scroll(band, row, num_rows)
 {
 	ldx #$00
 !:
@@ -88,26 +70,80 @@ main_loop:
 	inx
 	cpx #$27
 	bne !-
-	next_col(row, num_rows)
+	next_col(band, row, num_rows)
 }
 
-.macro next_col(row, num_rows)
-{
-	.var adr_dat = C64__SCREEN_DATA + $28 * row
-	.var adr_col = C64__SCREEN_COLOR + $28 * row
+//                0123456789abcdef               
+_WALL_TOP: .text "123             "
+_WALL_MID: .text "456             "
+_WALL_BOT: .text "789             "
+_EMPTY_BG: .text "                "
+_BIT_MASK: .byte $01, $02, $04, $08, $10, $20, $40, $80
 
+maybe_create_next:
+	lda _world_x
+	and #$7f
+	cmp #$00
+	beq !+
+	rts
+!:
 	lda_rand(_seed)
-	and #$01
-	clc
-	adc #' '-1
+	and #$07
+	tax
+	lda _BIT_MASK, x
+	eor #$ff
+	sta _walls
+	print_byte(_walls, 0, 0)
+	rts
+
+.macro next_col(band, row, num_rows)
+{
+	.var adr_dat = C64__SCREEN_DATA + $28 * row + $27
+	.var adr_col = C64__SCREEN_COLOR + $28 * row + $27
+
+	// randomize current wall
+	jsr maybe_create_next
+
+	// draw walls according to template
+	lda _world_x
+	lsr // get rid of offset bits
+	lsr
+	lsr
+	and #$0f
+	tax
+
+	lda _walls
+	and #(1 << band)
+	cmp #$00
+	bne insert_wall
+
+insert_air:
+	lda _EMPTY_BG, x
 	.for (var i = 0; i < num_rows; i++) {
-		sta adr_dat + $28 * i + $00, x
+		sta adr_dat + $28 * i
 	}
+	jmp done
+
+insert_wall:
+	lda _WALL_TOP, x
+	sta adr_dat
+	lda _WALL_MID, x
+	.for (var i = 1; i < num_rows - 1; i++) {
+		sta adr_dat + $28 * i
+	}
+	lda _WALL_BOT, x
+	sta adr_dat + $28 * (num_rows - 1)
+
+	// randomize color on segment start
+	cpx #$00
+	bne done
 	lda_rand(_seed)
 	and #$0f
 	.for (var i = 0; i < num_rows; i++) {
-		sta adr_col + $28 * i + $00, x
+		sta adr_col + $28 * i
 	}
+
+done:
 }
 
 .macro init_screen()
@@ -166,13 +202,10 @@ irq10: // floor
 	do_irq(0, $00, irq0)
 	rti
 
-
-
-
 .macro do_irq(scroll_offset, next_raster, next_handler)
 {
 	enter_irq()
-	lda _world_x16
+	lda _world_x
 	eor #$ff
 	clc
 	adc #scroll_offset
@@ -180,15 +213,4 @@ irq10: // floor
 	scroll_screen_x_a8(C64__ZEROP_BYTE)
 	setup_irq(next_raster, next_handler)
 	leave_irq()
-}
-
-
-.macro left_scroll_8th(row)
-{
-    ldx #$00
-!:  lda C64__SCREEN_DATA + $0001 + row * $80, x
-    sta C64__SCREEN_DATA + $0000 + row * $80, x
-    inx
-    cpx #$80 // 128
-    bne !-
 }

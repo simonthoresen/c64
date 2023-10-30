@@ -163,6 +163,11 @@ no_carry:
 }
 
 
+//            BCC/BCS BEQ/BNE BMI/BPL
+// acc = arg:  Carry,  Zero,  !Neg
+// acc > arg:  Carry, !Zero,  !Neg
+// acc < arg: !Carry, !Zero,   Neg
+
 
 // ------------------------------------------------------------
 //
