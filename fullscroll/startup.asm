@@ -90,7 +90,10 @@ main_loop:
 	bne !-
 
 	// draw next column
-	lda #'x'
+	lda_rand(_seed)
+	and #$01
+	clc
+	adc #'0'
 	.for (var i = 0; i < num_rows; i++) {
 		sta adr_dat + $28 * i + $00, x
 	}
