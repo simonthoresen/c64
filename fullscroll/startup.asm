@@ -3,6 +3,13 @@ BasicUpstart2(startup)
 
 
 /*
+ * 40x25
+ * 0: score
+ * 1: ceiling
+ * 2-23: 6 + 5 + 5 + 6
+ * 2 + 3 + 3 + 3 + 3 + 3 + 3 + 2
+ * 24: floor
+ * 
  * Split the screen into 4 horizontal sections (e.g. 6 rows each).
  *
  * Stagger the horizontal fine scroll offsets by 2 pixels per section (compared to the section above) 
@@ -18,6 +25,8 @@ _seed:
     alloc_seed()
 _scroll:
     .byte $00
+_frame:
+	.byte $00
 
 startup:
 	enter_startup()
@@ -28,7 +37,11 @@ main:
 	ldx #$00
 !:
 .for (var i = 0; i < 4; i++) {
-	lda_rand(_seed)
+	//lda_rand(_seed)
+	txa
+	and #%00000111
+	clc
+	adc #'0'
     sta C64__SCREEN_DATA + $0100*i, x
 }
 	inx    
@@ -46,81 +59,96 @@ main_loop:
 
 	// perform smooth scroll until we are ready to hard scroll the
 	// screen data
-.if (false)
-{
 	dec _scroll
-	lda _scroll
-    and #%00000111
-	cmp #%00000111
-	bne main_loop
-}
-
+	left_scroll_on($07, C64__SCREEN_DATA + $28 * 02, 2)
+	left_scroll_on($06, C64__SCREEN_DATA + $28 * 04, 3)
+	left_scroll_on($05, C64__SCREEN_DATA + $28 * 07, 3)
+	left_scroll_on($04, C64__SCREEN_DATA + $28 * 10, 3)
+	left_scroll_on($03, C64__SCREEN_DATA + $28 * 13, 3)
+	left_scroll_on($02, C64__SCREEN_DATA + $28 * 16, 3)
+	left_scroll_on($01, C64__SCREEN_DATA + $28 * 19, 3)
+	left_scroll_on($00, C64__SCREEN_DATA + $28 * 22, 2)
 	jmp main_loop
 
+.macro left_scroll_on(when, adr, num_rows)
+{
+	lda _scroll	
+	and #$07 // isolate lower 3 bits
+	cmp #when
+	bne !+
+	left_scroll(adr, num_rows)
+!:
+}
 
-irq0:
-	enter_irq()
-	scroll_screen_x_i8($07)
-    left_scroll_8th(0)
-	setup_irq($00, irq1)
-	leave_irq()
-	rti
+.macro left_scroll(adr, num_rows)
+{
+	ldx #$00
+!:
+	.for (var i = 0; i < num_rows; i++) {
+		lda adr + $28 * i + $01, x
+		sta adr + $28 * i + $00, x
+	}
+	inx
+	cpx #$27
+	bne !-
+	lda #'x'
+	.for (var i = 0; i < num_rows; i++) {
+		sta adr + $28 * i + $00, x
+	}
+}
 
-irq1:
-	enter_irq()
-	scroll_screen_x_i8($06)
-    left_scroll_8th(1)
-	setup_irq($00, irq2)
-	leave_irq()
-	rti
 
-irq2:
-	enter_irq()
-	scroll_screen_x_i8($05)
-    left_scroll_8th(2)
-	setup_irq($00, irq3)
-	leave_irq()
-	rti
-
-irq3:
-	enter_irq()
-	scroll_screen_x_i8($04)
-    left_scroll_8th(3)
-	setup_irq($00, irq4)
-	leave_irq()
-	rti
-
-irq4:
-	enter_irq()
-	scroll_screen_x_i8($03)
-    left_scroll_8th(4)
-	setup_irq($00, irq5)
-	leave_irq()
-	rti
-
-irq5:
-	enter_irq()
-	scroll_screen_x_i8($02)
-    left_scroll_8th(5)
-	setup_irq($00, irq6)
-	leave_irq()
-	rti
-
-irq6:
-	enter_irq()
-	scroll_screen_x_i8($01)
-    left_scroll_8th(6)
-	setup_irq($00, irq7)
-	leave_irq()
-	rti
-
-irq7:
+irq0: // score line
 	enter_irq()
 	scroll_screen_x_i8($00)
-    left_scroll_8th(7)
-	setup_irq($00, irq0)
+	setup_irq($3a, irq1)
 	leave_irq()
 	rti
+irq1: // ceiling
+	do_irq(0, $42, irq2)
+	rti
+irq2: // row 0
+	do_irq(0, $52, irq3)
+	rti
+irq3: // row 1
+	do_irq(1, $6a, irq4)
+	rti
+irq4: // row 2
+	do_irq(2, $82, irq5)
+	rti
+irq5: // row 3
+	do_irq(3, $9a, irq6)
+	rti
+irq6: // row 4
+	do_irq(4, $b2, irq7)
+	rti
+irq7: // row 5
+	do_irq(5, $ca, irq8)
+	rti
+irq8: // row 6
+	do_irq(6, $e2, irq9)
+	rti
+irq9: // row 7
+	do_irq(7, $f2, irq10)
+	rti
+irq10: // floor
+	do_irq(0, $00, irq0)
+	rti
+
+
+
+
+.macro do_irq(scroll_offset, next_raster, next_handler)
+{
+	enter_irq()
+	lda _scroll
+	clc
+	adc #scroll_offset
+	sta C64__ZEROP_BYTE
+	scroll_screen_x_a8(C64__ZEROP_BYTE)
+	setup_irq(next_raster, next_handler)
+	leave_irq()
+}
 
 
 .macro left_scroll_8th(row)
