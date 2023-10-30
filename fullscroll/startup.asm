@@ -23,8 +23,8 @@ BasicUpstart2(startup)
 
 _seed: 
     alloc_seed()
-_scroll:
-    .byte $00
+_world_x16:
+    .word $ffff
 _frame:
 	.byte $00
 _title:
@@ -51,20 +51,20 @@ main_loop:
 
 	// perform smooth scroll until we are ready to hard scroll the
 	// screen data
-	dec _scroll
-	left_scroll_on($07, 02, 2)
-	left_scroll_on($06, 04, 3)
-	left_scroll_on($05, 07, 3)
-	left_scroll_on($04, 10, 3)
-	left_scroll_on($03, 13, 3)
-	left_scroll_on($02, 16, 3)
-	left_scroll_on($01, 19, 3)
-	left_scroll_on($00, 22, 2)
+	inc__a16(_world_x16)
+	left_scroll_on($00, 02, 2)
+	left_scroll_on($01, 04, 3)
+	left_scroll_on($02, 07, 3)
+	left_scroll_on($03, 10, 3)
+	left_scroll_on($04, 13, 3)
+	left_scroll_on($05, 16, 3)
+	left_scroll_on($06, 19, 3)
+	left_scroll_on($07, 22, 2)
 	jmp main_loop
 
 .macro left_scroll_on(when, row, num_rows)
 {
-	lda _scroll	
+	lda _world_x16
 	and #$07 // isolate lower 3 bits
 	cmp #when
 	bne !+
@@ -83,19 +83,30 @@ main_loop:
 		sta adr_dat + $28 * i + $00, x
 
 		lda adr_col + $28 * i + $01, x
-		lda adr_col + $28 * i + $00, x
+		sta adr_col + $28 * i + $00, x
 	}
 	inx
 	cpx #$27
 	bne !-
+	next_col(row, num_rows)
+}
 
-	// draw next column
+.macro next_col(row, num_rows)
+{
+	.var adr_dat = C64__SCREEN_DATA + $28 * row
+	.var adr_col = C64__SCREEN_COLOR + $28 * row
+
 	lda_rand(_seed)
 	and #$01
 	clc
-	adc #'0'
+	adc #' '-1
 	.for (var i = 0; i < num_rows; i++) {
 		sta adr_dat + $28 * i + $00, x
+	}
+	lda_rand(_seed)
+	and #$0f
+	.for (var i = 0; i < num_rows; i++) {
+		sta adr_col + $28 * i + $00, x
 	}
 }
 
@@ -161,7 +172,8 @@ irq10: // floor
 .macro do_irq(scroll_offset, next_raster, next_handler)
 {
 	enter_irq()
-	lda _scroll
+	lda _world_x16
+	eor #$ff
 	clc
 	adc #scroll_offset
 	sta C64__ZEROP_BYTE
