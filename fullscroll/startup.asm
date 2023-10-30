@@ -27,6 +27,9 @@ _scroll:
     .byte $00
 _frame:
 	.byte $00
+_title:
+	//    "0123456789012345678901234567890123456789"
+	.text "score: 000       flappy       score: 000"
 
 startup:
 	enter_startup()
@@ -34,18 +37,7 @@ startup:
 	leave_startup()
 
 main:
-	ldx #$00
-!:
-.for (var i = 0; i < 4; i++) {
-	//lda_rand(_seed)
-	txa
-	and #%00000111
-	clc
-	adc #'0'
-    sta C64__SCREEN_DATA + $0100*i, x
-}
-	inx    
-    bne !-
+	init_screen()
 
 main_loop:
 	// color border so that white means we use cpu, black means we idle for
@@ -60,43 +52,68 @@ main_loop:
 	// perform smooth scroll until we are ready to hard scroll the
 	// screen data
 	dec _scroll
-	left_scroll_on($07, C64__SCREEN_DATA + $28 * 02, 2)
-	left_scroll_on($06, C64__SCREEN_DATA + $28 * 04, 3)
-	left_scroll_on($05, C64__SCREEN_DATA + $28 * 07, 3)
-	left_scroll_on($04, C64__SCREEN_DATA + $28 * 10, 3)
-	left_scroll_on($03, C64__SCREEN_DATA + $28 * 13, 3)
-	left_scroll_on($02, C64__SCREEN_DATA + $28 * 16, 3)
-	left_scroll_on($01, C64__SCREEN_DATA + $28 * 19, 3)
-	left_scroll_on($00, C64__SCREEN_DATA + $28 * 22, 2)
+	left_scroll_on($07, 02, 2)
+	left_scroll_on($06, 04, 3)
+	left_scroll_on($05, 07, 3)
+	left_scroll_on($04, 10, 3)
+	left_scroll_on($03, 13, 3)
+	left_scroll_on($02, 16, 3)
+	left_scroll_on($01, 19, 3)
+	left_scroll_on($00, 22, 2)
 	jmp main_loop
 
-.macro left_scroll_on(when, adr, num_rows)
+.macro left_scroll_on(when, row, num_rows)
 {
 	lda _scroll	
 	and #$07 // isolate lower 3 bits
 	cmp #when
 	bne !+
-	left_scroll(adr, num_rows)
+	left_scroll(row, num_rows)
 !:
 }
 
-.macro left_scroll(adr, num_rows)
+.macro left_scroll(row, num_rows)
 {
 	ldx #$00
 !:
+	.var adr_dat = C64__SCREEN_DATA + $28 * row
+	.var adr_col = C64__SCREEN_COLOR + $28 * row
 	.for (var i = 0; i < num_rows; i++) {
-		lda adr + $28 * i + $01, x
-		sta adr + $28 * i + $00, x
+		lda adr_dat + $28 * i + $01, x
+		sta adr_dat + $28 * i + $00, x
+
+		lda adr_col + $28 * i + $01, x
+		lda adr_col + $28 * i + $00, x
 	}
 	inx
 	cpx #$27
 	bne !-
+
+	// draw next column
 	lda #'x'
 	.for (var i = 0; i < num_rows; i++) {
-		sta adr + $28 * i + $00, x
+		sta adr_dat + $28 * i + $00, x
 	}
 }
 
+.macro init_screen()
+{
+	ldx #$00
+!:
+	lda _title, x
+	sta C64__SCREEN_DATA + $28 * 00, x
+	lda #'x'
+    sta C64__SCREEN_DATA + $28 * 01, x
+	lda #' '
+	.for (var i = 2; i < 24; i++) {
+		sta C64__SCREEN_DATA + $28 * i, x
+	}
+	lda #'x'
+    sta C64__SCREEN_DATA + $28 * 24, x
+	inx
+	cpx #$28
+    bne !-
+}
 
 irq0: // score line
 	enter_irq()
