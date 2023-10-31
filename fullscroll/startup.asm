@@ -1,5 +1,6 @@
 BasicUpstart2(startup)
 #import "../c64lib/c64lib.asm"
+#import "data.asm"
 
 _seed: 
     alloc_seed()
@@ -13,9 +14,11 @@ _title:
 	//    "0123456789012345678901234567890123456789"
 	.text "score: 000       flappy       score: 000"
 
+*=$4000 "Main Program"
 startup:
 	enter_startup()
 	setup_irq($00, irq0)
+	setup_charset()
 	leave_startup()
 
 main:
@@ -34,6 +37,7 @@ main_loop:
 	// perform smooth scroll until we are ready to hard scroll the
 	// screen data
 	inc _world_x
+	left_rotate_on($00, 01)
 	left_scroll_on($00, 02, 2)
 	left_scroll_on($01, 04, 3)
 	left_scroll_on($02, 07, 3)
@@ -42,7 +46,43 @@ main_loop:
 	left_scroll_on($05, 16, 3)
 	left_scroll_on($06, 19, 3)
 	left_scroll_on($07, 22, 2)
+	left_rotate_on($00, 24)
 	jmp main_loop
+
+.macro left_rotate_on(band, row)
+{
+	lda _world_x
+	and #$07 // isolate lower 3 bits
+	cmp #band
+	bne !+
+	left_rotate(band, row)
+!:
+}
+
+.macro left_rotate(band, row)
+{
+	.var adr_dat = C64__SCREEN_DATA + $28 * row
+	.var adr_col = C64__SCREEN_COLOR + $28 * row
+	lda adr_dat
+	pha
+	lda adr_col
+	pha
+
+	ldx #$00
+!:
+	lda adr_dat + $01, x
+	sta adr_dat + $00, x
+	lda adr_col + $01, x
+	sta adr_col + $00, x
+	inx
+	cpx #$27
+	bne !-
+
+	pla 
+	sta adr_col, x
+	pla
+	sta adr_dat, x
+}
 
 .macro left_scroll_on(band, row, num_rows)
 {
@@ -74,11 +114,17 @@ main_loop:
 }
 
 //                0123456789abcdef               
-_WALL_TOP: .text "123             "
-_WALL_MID: .text "456             "
-_WALL_BOT: .text "789             "
-_EMPTY_BG: .text "                "
+_WALL_TOP: .byte $77, $78, $79, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+_WALL_MID: .byte $71, $72, $73, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+_WALL_BOT: .byte $74, $75, $76, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+_EMPTY_BG: .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
 _BIT_MASK: .byte $01, $02, $04, $08, $10, $20, $40, $80
+
+_WALL_MID_C: .byte $09, $0B, $0B, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+_WALL_BOT_C: .byte $0B, $0B, $0B, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+_WALL_TOP_C: .byte $09, $0F, $0B, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+_EMPTY_BG_C: .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+
 
 maybe_create_next:
 	lda _world_x
@@ -93,7 +139,6 @@ maybe_create_next:
 	lda _BIT_MASK, x
 	eor #$ff
 	sta _walls
-	print_byte(_walls, 0, 0)
 	rts
 
 .macro next_col(band, row, num_rows)
@@ -134,32 +179,53 @@ insert_wall:
 	lda _WALL_BOT, x
 	sta adr_dat + $28 * (num_rows - 1)
 
-	// randomize color on segment start
-	cpx #$00
-	bne done
-	lda_rand(_seed)
-	and #$0f
+done:
 	.for (var i = 0; i < num_rows; i++) {
+		ldx adr_dat + $28 * i
+		//lda $3000, x
+		//and #$0f
+		jsr lda_char_col
 		sta adr_col + $28 * i
 	}
-
-done:
 }
+
+lda_char_col:
+	lda $3000, x
+	and #$0f
+	rts
 
 .macro init_screen()
 {
+	clear_screen($00)
+
 	ldx #$00
 !:
 	lda _title, x
 	sta C64__SCREEN_DATA + $28 * 00, x
-	lda #'x'
+	inx
+	cpx #$28
+    bne !-
+
+	// ceil and floor
+	ldx #$00
+!:
+	lda #$0f
     sta C64__SCREEN_DATA + $28 * 01, x
-	lda #' '
-	.for (var i = 2; i < 24; i++) {
-		sta C64__SCREEN_DATA + $28 * i, x
-	}
-	lda #'x'
     sta C64__SCREEN_DATA + $28 * 24, x
+	tay
+	lda $3000, y
+	and #$0f
+	sta C64__SCREEN_COLOR + $28 * 01, x
+    sta C64__SCREEN_COLOR + $28 * 24, x
+	inx
+	lda #$10
+    sta C64__SCREEN_DATA + $28 * 01, x
+    sta C64__SCREEN_DATA + $28 * 24, x
+	tay
+	lda $3000, y
+	and #$0f
+	sta C64__SCREEN_COLOR + $28 * 01, x
+    sta C64__SCREEN_COLOR + $28 * 24, x
 	inx
 	cpx #$28
     bne !-
@@ -213,4 +279,25 @@ irq10: // floor
 	scroll_screen_x_a8(C64__ZEROP_BYTE)
 	setup_irq(next_raster, next_handler)
 	leave_irq()
+}
+
+.macro setup_charset()
+{
+	lda C64__SCREEN_CTRL2
+	ora #%00010000 // multicolor
+	sta C64__SCREEN_CTRL2
+
+
+	lda #$00
+	sta C64__COLOR_BG0
+	lda #$0e
+	sta C64__COLOR_BG1
+	lda #$06
+	sta C64__COLOR_BG2
+
+
+	lda C64__MEM_SETUP
+	and #%11110001
+	ora #%00001010 // $2800-$2fff
+	sta C64__MEM_SETUP
 }
