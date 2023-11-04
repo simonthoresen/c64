@@ -34,32 +34,43 @@ main_loop:
 	lda #$01
 	sta C64__COLOR_BORDER
 
-	// perform smooth scroll until we are ready to hard scroll the
-	// screen data
-	inc _world_x
-	left_rotate_on($00, 01)
-	left_scroll_on($00, 02, 2)
-	left_scroll_on($01, 04, 3)
-	left_scroll_on($02, 07, 3)
-	left_scroll_on($03, 10, 3)
-	left_scroll_on($04, 13, 3)
-	left_scroll_on($05, 16, 3)
-	left_scroll_on($06, 19, 3)
-	left_scroll_on($07, 22, 2)
-	left_rotate_on($00, 24)
+	jsr scroll_world
 	jmp main_loop
 
-.macro left_rotate_on(band, row)
-{
+
+scroll_world:
+	inc _world_x
 	lda _world_x
-	and #$07 // isolate lower 3 bits
+	and #$07
+
+	cmp #$00
+	bne !+
+	left_rotate(1)
+	left_rotate(24)
+!:
+
+	lda _world_x
+	and #$07
+	check_band($00, 02, 2)
+	check_band($01, 04, 3)
+	check_band($02, 07, 3)
+	check_band($03, 10, 3)
+	check_band($04, 13, 3)
+	check_band($05, 16, 3)
+	check_band($06, 19, 3)
+	check_band($07, 22, 2)
+	rts
+
+.macro check_band(band, row, num_rows)
+{
 	cmp #band
 	bne !+
-	left_rotate(band, row)
+	left_scroll(band, row, num_rows)
+	rts
 !:
 }
 
-.macro left_rotate(band, row)
+.macro left_rotate(row)
 {
 	.var adr_dat = C64__SCREEN_DATA + $28 * row
 	.var adr_col = C64__SCREEN_COLOR + $28 * row
@@ -82,16 +93,6 @@ main_loop:
 	sta adr_col, x
 	pla
 	sta adr_dat, x
-}
-
-.macro left_scroll_on(band, row, num_rows)
-{
-	lda _world_x
-	and #$07 // isolate lower 3 bits
-	cmp #band
-	bne !+
-	left_scroll(band, row, num_rows)
-!:
 }
 
 .macro left_scroll(band, row, num_rows)
@@ -201,6 +202,7 @@ lda_char_col:
 	ldx #$00
 !:
 	lda _title, x
+	//adc #$4a8 // fonts
 	sta C64__SCREEN_DATA + $28 * 00, x
 	inx
 	cpx #$28
