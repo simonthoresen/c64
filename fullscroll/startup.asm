@@ -199,39 +199,39 @@ lda_char_col:
 {
 	clear_screen($00)
 
-	ldx #$00
-!:
-	lda _title, x
-	//adc #$4a8 // fonts
-	sta C64__SCREEN_DATA + $28 * 00, x
-	inx
-	cpx #$28
-    bne !-
+	//    "0123456789012345678901234567890123456789"
+	.var font_adr = $2800 + $0495
+	.var font_chars = @" abcdefghijklmnopqrstuvwxyz0123456789.,?!'\"()-+:"
+	.var title_line = "score: 000       flappy       score: 000"
 
-	// ceil and floor
-	ldx #$00
-!:
-	lda #$0f
-    sta C64__SCREEN_DATA + $28 * 01, x
-    sta C64__SCREEN_DATA + $28 * 24, x
-	tay
-	lda $3000, y
+	ldx #$11
+	.for (var i = 0; i < title_line.size(); i++) {
+		lda #font_adr + index_of(title_line.charAt(i), font_chars)
+		sta C64__SCREEN_DATA + i
+		stx C64__SCREEN_COLOR + i
+	}
+
+	ldx #$0f
+	lda $3000 + $0f
 	and #$0f
-	sta C64__SCREEN_COLOR + $28 * 01, x
-    sta C64__SCREEN_COLOR + $28 * 24, x
-	inx
-	lda #$10
-    sta C64__SCREEN_DATA + $28 * 01, x
-    sta C64__SCREEN_DATA + $28 * 24, x
-	tay
-	lda $3000, y
+	.for (var i = 0; i < 40; i += 2) {
+		stx C64__SCREEN_DATA  + $28 * 01 + i
+		sta C64__SCREEN_COLOR + $28 * 01 + i
+		stx C64__SCREEN_DATA  + $28 * 24 + i
+		sta C64__SCREEN_COLOR + $28 * 24 + i
+	}
+
+	ldx #$10
+	lda $3000 + $10
 	and #$0f
-	sta C64__SCREEN_COLOR + $28 * 01, x
-    sta C64__SCREEN_COLOR + $28 * 24, x
-	inx
-	cpx #$28
-    bne !-
+	.for (var i = 1; i < 40; i += 2) {
+		stx C64__SCREEN_DATA  + $28 * 01 + i
+		sta C64__SCREEN_COLOR + $28 * 01 + i
+		stx C64__SCREEN_DATA  + $28 * 24 + i
+		sta C64__SCREEN_COLOR + $28 * 24 + i
+	}
 }
+
 
 irq0: // score line
 	enter_irq()

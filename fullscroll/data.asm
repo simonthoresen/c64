@@ -1,5 +1,5 @@
 *=$2800 "Character Set"
-// robocop chars, 149 chars, $4a8 bytes
+// robocop chars, 149 chars, $04a8 bytes
 .byte $00,$00,$00,$00,$00,$00,$00,$00,$AA,$FF,$55,$55,$77,$A2,$2A,$8C
 .byte $AA,$FF,$55,$55,$55,$FF,$32,$88,$00,$CC,$33,$FC,$F7,$EF,$99,$56
 .byte $75,$55,$76,$56,$55,$95,$66,$99,$5A,$65,$99,$56,$65,$9D,$75,$5A
@@ -76,7 +76,8 @@
 .byte $F2,$F2,$F2,$72,$F2,$72,$D2,$72,$AA,$FF,$55,$55,$77,$A2,$2A,$8C
 .byte $75,$55,$76,$56,$55,$95,$66,$99
 
-// antiraid chars, 48 images, $180 bytes
+// antiraid chars, 48 images, $0180 bytes
+//  abcdefghijklmnopqrstuvwxyz0123456789.,?!'"()-+:
 .byte $00,$00,$00,$00,$00,$00,$00,$00,$7C,$EE,$C6,$C6,$FE,$C6,$C6,$00
 .byte $FC,$C6,$C6,$FC,$C6,$C6,$FE,$00,$7E,$E6,$C0,$C0,$C0,$E6,$7E,$00
 .byte $FC,$CE,$C6,$C6,$C6,$CE,$FC,$00,$FE,$C6,$C0,$F8,$C0,$C6,$FE,$00
@@ -104,7 +105,7 @@
 .fill $800 - $628, $00
 
 
-// per-char attributes, 149 chars, $9a bytes
+// per-char attributes, 149 chars, $009a bytes
 *=$3000 "Character Attributes"
 .byte $F0,$AA,$FA,$CE,$FB,$2B,$FD,$0A,$0B,$DB,$0E,$0B,$0D,$0B,$FF,$0B
 .byte $FB,$5B,$0B,$0B,$FA,$36,$06,$0E,$F8,$36,$7B,$FB,$AB,$FB,$96,$06
