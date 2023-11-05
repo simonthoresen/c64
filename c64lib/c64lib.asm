@@ -377,7 +377,7 @@ no_carry:
 			.return i
 		}
 	}
-	.return -1
+	.error("char '" + look_for + "' not found")
 }
 
 
