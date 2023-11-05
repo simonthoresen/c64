@@ -19,6 +19,7 @@ startup:
 	enter_startup()
 	setup_irq($00, irq0)
 	setup_charset()
+	setup_jump_table()
 	leave_startup()
 
 main:
@@ -45,55 +46,98 @@ scroll_world:
 
 	cmp #$00
 	bne !+
-	left_rotate(1)
-	left_rotate(24)
+	jsr rotate_ceil
 !:
+	jmp scroll_band
+	rts
 
+rotate_ceil:
+	lda _world_x
+	lsr
+	lsr
+	lsr
+	and #$01
+	adc #$0f
+	tax
+	
+	lda _world_x
+	lsr
+	lsr
+	lsr
+	eor #$ff
+	and #$01
+	adc #$0f
+	tay
+
+	.for (var i = 0; i < 40; i++) {
+		.if ((i & $01) == 1) {
+			stx C64__SCREEN_DATA  + $28 * 01 + i
+			stx C64__SCREEN_DATA  + $28 * 24 + i
+		} else {
+			sty C64__SCREEN_DATA  + $28 * 01 + i
+			sty C64__SCREEN_DATA  + $28 * 24 + i
+		}
+	}
+	rts
+
+_BAND_JUMP:
+	.word $00, $00, $00, $00, $00, $00, $00, $00
+
+.macro setup_jump_table()
+{
+	setup_jump(scroll_band_0, 0)
+	setup_jump(scroll_band_1, 1)
+	setup_jump(scroll_band_2, 2)
+	setup_jump(scroll_band_3, 3)
+	setup_jump(scroll_band_4, 4)
+	setup_jump(scroll_band_5, 5)
+	setup_jump(scroll_band_6, 6)
+	setup_jump(scroll_band_7, 7)
+}
+
+.macro setup_jump(fnc, idx)
+{
+	lda #<fnc
+	sta _BAND_JUMP + idx * 2
+	lda #>fnc
+	sta _BAND_JUMP + idx * 2 + 1
+}
+
+scroll_band:
 	lda _world_x
 	and #$07
-	check_band($00, 02, 2)
-	check_band($01, 04, 3)
-	check_band($02, 07, 3)
-	check_band($03, 10, 3)
-	check_band($04, 13, 3)
-	check_band($05, 16, 3)
-	check_band($06, 19, 3)
-	check_band($07, 22, 2)
+	asl
+	tax
+	lda _BAND_JUMP, x
+	sta C64__ZEROP_WORD_LO
+	lda _BAND_JUMP+1, x
+	sta C64__ZEROP_WORD_HI
+	jmp (C64__ZEROP_WORD)
+scroll_band_0:
+	left_scroll(0, 2, 2)
 	rts
-
-.macro check_band(band, row, num_rows)
-{
-	cmp #band
-	bne !+
-	left_scroll(band, row, num_rows)
+scroll_band_1:
+	left_scroll(1, 4, 3)
 	rts
-!:
-}
-
-.macro left_rotate(row)
-{
-	.var adr_dat = C64__SCREEN_DATA + $28 * row
-	.var adr_col = C64__SCREEN_COLOR + $28 * row
-	lda adr_dat
-	pha
-	lda adr_col
-	pha
-
-	ldx #$00
-!:
-	lda adr_dat + $01, x
-	sta adr_dat + $00, x
-	lda adr_col + $01, x
-	sta adr_col + $00, x
-	inx
-	cpx #$27
-	bne !-
-
-	pla 
-	sta adr_col, x
-	pla
-	sta adr_dat, x
-}
+scroll_band_2:
+	left_scroll(2, 7, 3)
+	rts
+scroll_band_3:
+	left_scroll(3, 10, 3)
+	rts
+scroll_band_4:
+	left_scroll(4, 13, 3)
+	rts
+scroll_band_5:
+	left_scroll(5, 16, 3)
+	rts
+scroll_band_6:
+	left_scroll(6, 19, 3)
+	rts
+scroll_band_7:
+	left_scroll(7, 22, 2)
+	rts
+	
 
 .macro left_scroll(band, row, num_rows)
 {
@@ -211,24 +255,19 @@ lda_char_col:
 		stx C64__SCREEN_COLOR + i
 	}
 
+	lda #$0b
 	ldx #$0f
-	lda $3000 + $0f
-	and #$0f
-	.for (var i = 0; i < 40; i += 2) {
-		stx C64__SCREEN_DATA  + $28 * 01 + i
+	ldy #$10
+	.for (var i = 0; i < 40; i++) {
 		sta C64__SCREEN_COLOR + $28 * 01 + i
-		stx C64__SCREEN_DATA  + $28 * 24 + i
 		sta C64__SCREEN_COLOR + $28 * 24 + i
-	}
-
-	ldx #$10
-	lda $3000 + $10
-	and #$0f
-	.for (var i = 1; i < 40; i += 2) {
-		stx C64__SCREEN_DATA  + $28 * 01 + i
-		sta C64__SCREEN_COLOR + $28 * 01 + i
-		stx C64__SCREEN_DATA  + $28 * 24 + i
-		sta C64__SCREEN_COLOR + $28 * 24 + i
+		.if ((i & $01) == 1) {
+			stx C64__SCREEN_DATA  + $28 * 01 + i
+			stx C64__SCREEN_DATA  + $28 * 24 + i
+		} else {
+			sty C64__SCREEN_DATA  + $28 * 01 + i
+			sty C64__SCREEN_DATA  + $28 * 24 + i
+		}
 	}
 }
 
