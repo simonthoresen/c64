@@ -1,47 +1,18 @@
 BasicUpstart2(startup)
-#import "../c64lib/c64lib.asm"
-
-.const C64__SPRITE_W = 24
-.const C64__SPRITE_H = 21
-
-.const ADR_DATA = $2000
-.const ADR_DATA_64 = ADR_DATA/64
-*=ADR_DATA "Data"
-_sprite0: // 24 x 21
-    .byte %00000000,%00000000,%00000000
-    .byte %00000000,%00000000,%00000000
-    .byte %00000000,%00000000,%00000000
-    .byte %00001111,%11111111,%11100000
-    .byte %00001111,%11111111,%11100000
-    .byte %00001111,%11111111,%11100000
-    .byte %00001111,%11111111,%11100000
-    .byte %00001111,%11111111,%11100000
-    .byte %00001111,%11111111,%11100000
-    .byte %00001111,%11111111,%11100000
-    .byte %00001111,%11101111,%11100000
-    .byte %00001111,%11111111,%11100000
-    .byte %00001111,%11111111,%11100000
-    .byte %00001111,%11111111,%11100000
-    .byte %00001111,%11111111,%11100000
-    .byte %00001111,%11111111,%11100000
-    .byte %00001111,%11111111,%11100000
-    .byte %00001111,%11111111,%11100000
-    .byte %00000000,%00000000,%00000000
-    .byte %00000000,%00000000,%00000000
-    .byte %00000000,%00000000,%00000000
- 	.byte $00
-    .fill 64, $00
+.label ADR_DATA = $2000
+.label DATA_BLOCK = ADR_DATA/64
+*=ADR_DATA "Program Data"
+#import "data.asm"
 
 *=$4000 "Main Program"
+#import "../c64lib/c64lib.asm"
+
 startup:
     do_rotate()
     //rotate_sprite(_sprite0, _sprite0 + 64, 11, 10, 5)
 
-    lda #ADR_DATA_64 + 0
+    lda #DATA_BLOCK
     sta C64__SPRITE_POINTERS
-
-    lda #ADR_DATA_64 + 1
-    sta C64__SPRITE_POINTERS + 1
 
     lda #$00
 	sta C64__SPRITE_POS_UPPER
@@ -51,15 +22,20 @@ startup:
     lda #$32
 	sta C64__SPRITE_POS + 1
 
-    lda #$38
-	sta C64__SPRITE_POS + 2
-    lda #$32
-	sta C64__SPRITE_POS + 3
-
     lda #$ff
     sta C64__SPRITE_ENABLED
-    
-    jmp *
+
+main:
+    lda #DATA_BLOCK
+    sta C64__SPRITE_POINTERS
+    ldx #$00
+!:
+    wait_vblank()
+    inc C64__SPRITE_POINTERS
+    inx
+    cpx #$09
+    bne !-     
+    jmp main
 
 .macro do_rotate()
 {
