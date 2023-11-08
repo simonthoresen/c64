@@ -9,7 +9,6 @@ BasicUpstart2(startup)
 
 startup:
     do_rotate()
-    //rotate_sprite(_sprite0, _sprite0 + 64, 11, 10, 5)
 
     lda #DATA_BLOCK
     sta C64__SPRITE_POINTERS
@@ -33,7 +32,7 @@ main:
     wait_vblank()
     inc C64__SPRITE_POINTERS
     inx
-    cpx #$09
+    cpx #72
     bne !-     
     jmp main
 
@@ -44,19 +43,19 @@ main:
     .eval src.add("000000000000000000000000")
     .eval src.add("000000000000000000000000")
     .eval src.add("000011111111111111100000")
-    .eval src.add("000011111111111111100000")
-    .eval src.add("000011111111111111100000")
-    .eval src.add("000011111111111111100000")
-    .eval src.add("000011111111111111100000")
-    .eval src.add("000011111111111111100000")
-    .eval src.add("000011111111111111100000")
-    .eval src.add("000011111111111111100000")
-    .eval src.add("000011111111111111100000")
-    .eval src.add("000011111111111111100000")
-    .eval src.add("000011111111111111100000")
-    .eval src.add("000011111111111111100000")
-    .eval src.add("000011111111111111100000")
-    .eval src.add("000011111111111111100000")
+    .eval src.add("000011111111111110100000")
+    .eval src.add("000011111111111100100000")
+    .eval src.add("000011111111111010100000")
+    .eval src.add("000011111111110110100000")
+    .eval src.add("000011111111101110100000")
+    .eval src.add("000011111111011110100000")
+    .eval src.add("000011111110111110100000")
+    .eval src.add("000011111101111110100000")
+    .eval src.add("000011111011111110100000")
+    .eval src.add("000011110111111110100000")
+    .eval src.add("000011101111111110100000")
+    .eval src.add("000011011111111110100000")
+    .eval src.add("000010000000000000100000")
     .eval src.add("000011111111111111100000")
     .eval src.add("000000000000000000000000")
     .eval src.add("000000000000000000000000")
@@ -65,7 +64,7 @@ main:
     .var cx = 11
     .var cy = 10
 
-    .for (var ra = 0; ra <= 360; ra = ra + 10) {
+    .for (var ra = 0; ra < 360; ra = ra + 5) {
         .var rm = RotationMatrix(0, 0, toRadians(-ra))
         .for (var dy = 0; dy < C64__SPRITE_H; dy++) {
             .var str = ".byte %"
@@ -90,42 +89,4 @@ main:
         }
         .print ".byte $00"
     }
-}
-
-.macro rotate_sprite(src, dst, cx, cy, rot)
-{
-    .var rm = RotationMatrix(0, 0, toRadians(rot))    
-    .for (var sy = 0; sy < C64__SPRITE_H; sy++) {
-        .for (var sx = 0; sx < C64__SPRITE_W; sx++) {
-            .var dv = rm * Vector(sx - cx, sy - cy, 0)
-            .var dx = cx + round(dv.getX())
-            .var dy = cy + round(dv.getY())
-            .if (dx >= 0 && dx < C64__SPRITE_W && 
-                 dy >= 0 && dy < C64__SPRITE_H) 
-            {
-                copy_pixel(src, sx, sy, dst, dx, dy)
-            }
-        }
-    }
-}
-
-.macro copy_pixel(src, sx, sy, dst, dx, dy) 
-{
-    .var src_idx = floor(sx / 8) + sy * 3
-    .var src_msk = 1 << mod(sx, 8)
-    .var dst_idx = floor(dx / 8) + dy * 3
-    .var dst_msk = 1 << mod(dx, 8)
-
-    .print("(" + sx + "," + sy + ") i:" + src_idx + " m:" + toBinaryString(src_msk, 8) + " -> " +
-           "(" + dx + "," + dy + ") i:" + dst_idx + " m:" + toBinaryString(dst_msk, 8))
-
-    lda src + src_idx
-    and #src_msk
-    cmp #$00
-    beq no_pixel
-set_pixel:
-    lda dst + dst_idx
-    ora #dst_msk
-    sta dst + dst_idx
-no_pixel:
 }
