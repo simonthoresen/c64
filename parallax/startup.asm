@@ -76,6 +76,16 @@ _screen:
             }
         }
     }
+_color:
+    .for (var y = 0; y < 8; y++) {
+        .for (var x = 0; x < 40; x++) {
+            .if (x >= 38 && y > 0 && y < 3) {
+                .byte $02
+            } else {
+                .byte $01
+            }
+        }
+    }
 
 startup:
     lda #$00
@@ -114,13 +124,19 @@ hard_scroll:
     .for (var i = 0; i < 4; i++) {
         lda C64__SCREEN_DATA + i * $28 + $00
         pha
+        lda C64__SCREEN_COLOR + i * $28 + $00
+        pha
         ldx #$00
 !:
         lda C64__SCREEN_DATA + i * $28 + $01, x
         sta C64__SCREEN_DATA + i * $28 + $00, x
+        lda C64__SCREEN_COLOR + i * $28 + $01, x
+        sta C64__SCREEN_COLOR + i * $28 + $00, x
         inx
         cpx #$27
         bne !-
+        pla
+        sta C64__SCREEN_COLOR + i * $28 + $27
         pla
         sta C64__SCREEN_DATA + i * $28 + $27
     }
@@ -132,6 +148,8 @@ render_world:
 !:
     lda _screen, x
     sta C64__SCREEN_DATA, x
+    lda _color, x
+    sta C64__SCREEN_COLOR, x
     inx
     cpx #$a0
     bne !-
