@@ -15,6 +15,7 @@
 .label C64__COLOR               = $0286
 .const C64__COLOR_BORDER        = $d020
 .const C64__COLOR_BG0           = $d021
+.const C64__COLOR_BG            = C64__COLOR_BG0
 .const C64__COLOR_BG1           = $d022
 .const C64__COLOR_BG2           = $d023
 .const C64__COLOR_BG3           = $d024
@@ -194,9 +195,8 @@ no_carry:
     lda $dd0d  // if we don't do this, a pending CIA irq might occur after we finish setting up our irq.
                // we don't want that to happen.
 
-    lda #$1b   // as there are more than 256 rasterlines, the topmost bit of $d011 serves as
-    sta $d011  // the 9th bit for the rasterline we want our irq to be triggered.
-               // here we simply set up a character screen, leaving the topmost bit 0.
+    lda #$00
+    sta C64__IRQ_CTRL
 
     lda #$35   // we turn off the BASIC and KERNAL rom here
     sta $01    // the cpu now sees RAM everywhere except at $d000-$e000, where still the registers of
@@ -340,13 +340,23 @@ no_carry:
 	sta C64__COLOR_BORDER
 }
 
-.macro setup_irq(i8_line, i16_irq)
+.macro setup_irq(i16_line, i16_irq)
 {
     lda #$81            // this is how to tell the VICII to generate a raster interrupt
     sta C64__IRQ_CTRL
 
-    lda #i8_line        // this is how to tell at which rasterline we want the irq to be triggered
+    lda #(i16_line & $ff) // this is how to tell at which rasterline we want the irq to be triggered
     sta C64__RASTER_LINE
+
+    // as there are more than 256 rasterlines, the topmost bit of $d011 serves as
+    // the 9th bit for the rasterline we want our irq to be triggered.
+    lda C64__SCREEN_CTRL1
+    .if (i16_line > $ff) {
+        and #$80 // set the msb
+    } else {
+        and #$7f // clear the msb
+    }
+    sta C64__SCREEN_CTRL1   
 
     lda #<i16_irq       // this is how we set up
     sta C64__IRQ_LO     // the address of our interrupt code
