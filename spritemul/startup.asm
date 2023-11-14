@@ -46,11 +46,12 @@ main:
     ldx #$00
 !:
     .for (var i = 0; i < 11; i++) {
-        lda #($30 + $16 * i)
+        lda #($30 + $16 * i)        
 !:
         cmp C64__RASTER_LINE
         bne !-
 
+        inc C64__COLOR_BORDER
         clc
         adc #$02
         .for (var j = 0; j < 8; j++) {
@@ -70,6 +71,7 @@ main:
             and #$3f
             tay
         }
+        dec C64__COLOR_BORDER
     }
     inx
     cpx #$40
