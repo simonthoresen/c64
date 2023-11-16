@@ -32,10 +32,20 @@ _sin_y:
 _text:
     .fill TEXT.size(), index_of(TEXT.charAt(i), FONT)
     .byte $ff
-
-_frame:
+_tick:
+    .byte $00    
+_msprite_id:
     .byte $00
-    
+_msprites_x:
+    .fill 256, $00
+_msprites_y:
+    .fill 256, $00
+_y_to_msprite:
+    .fill 256, $00
+_next_msprite:
+    .fill 256, $00
+
+
 
 // ------------------------------------------------------------
 //
@@ -48,7 +58,7 @@ _frame:
 startup:
     do_startup()
     clear_screen($20)
-    jsr enable_sprites
+    jsr enable_psprites
 
 main:
     lda #$00
@@ -58,9 +68,9 @@ main:
 }
     lda #$02
     sta C64__COLOR_BORDER
-    inc _frame
+    inc _tick
 
-    jsr update_sprites_xy
+    jsr tick_msprites
     jsr clear_sort_table
     jsr sort_sprites
     jsr render_sprites
@@ -92,7 +102,7 @@ render_sprites:
 
     ldy #$00 // current row in the sort-table
 render_y:   
-    lda _sort_ytable, y // x is sprite-id
+    lda _y_to_msprite, y // x is sprite-id
     cmp #$ff
     beq next_y
 
@@ -102,7 +112,7 @@ render_y:
 
     // render sprite x at position y
     ldx _sprite_idx
-    lda _sprites_x, x
+    lda _msprites_x, x
     ldx _sprite_idx2
     sta C64__SPRITE_POS + 0, x
 
@@ -120,7 +130,7 @@ render_y:
 
     // check linked list
     ldx _sprite_idx
-    lda _sort_xlinks, x
+    lda _next_msprite, x
     cmp #$ff
     beq !+
     inc C64__COLOR_BG
@@ -147,37 +157,35 @@ render_done:
 // id in the sort-table.
 //
 // ------------------------------------------------------------
-_sort_sprite_id:
-    .byte $00
-
 sort_sprites:
 {
     lda #$00
-    sta _sort_sprite_id
+    sta _msprite_id
+
 sort_loop:
-    // store the sprite-id in the sort-table
-    ldx _sort_sprite_id
-    ldy _sprites_y, x
-    lda _sort_ytable, y // acc is cursor of linked-list
+    ldx _msprite_id
+    ldy _msprites_y, x
+    lda _y_to_msprite, y // acc is cursor of linked-list
     cmp #$ff
     beq empty_row
 
 not_empty:
-    tax                 // transfer linked-list cursor from acc to x
-    lda _sort_xlinks, x // read from linked-list using x
-    cmp #$ff            // compare with no-sprite identifier
-    bne not_empty       // loop until we found the tail
+    tax                  // transfer linked-list cursor from acc to x
+    lda _next_msprite, x // read from linked-list using x
+    cmp #$ff             // compare with no-sprite identifier
+    bne not_empty        // loop until we found the tail
 
-    lda _sort_sprite_id
-    sta _sort_xlinks, x
-    jmp !+
+    lda _msprite_id
+    sta _next_msprite, x
+    jmp continue
 
 empty_row:
     txa
-    sta _sort_ytable, y
-!:
-    inc _sort_sprite_id
-    lda _sort_sprite_id
+    sta _y_to_msprite, y
+
+continue:
+    inc _msprite_id
+    lda _msprite_id
     cmp #NUM_SPRITES
     bne sort_loop
     rts
@@ -192,18 +200,13 @@ empty_row:
 // indexed by the sprite id.
 //
 // ------------------------------------------------------------
-_sort_ytable:
-    .fill 256, $00
-_sort_xlinks:
-    .fill 256, $00
-
 clear_sort_table:
 {
     lda #$ff
     ldx #$00
 !:
-    sta _sort_ytable, x
-    sta _sort_xlinks, x
+    sta _y_to_msprite, x
+    sta _next_msprite, x
     inx
     bne !-
     rts
@@ -214,12 +217,7 @@ clear_sort_table:
 // Calculate sprite x and y positions.
 //
 // ------------------------------------------------------------
-_sprites_x:
-    .fill 256, $00
-_sprites_y:
-    .fill 256, $00
-
-update_sprites_xy:
+tick_msprites:
 {
     ldx #$00
 !:
@@ -229,10 +227,10 @@ update_sprites_xy:
     asl
     asl
     clc
-    adc _frame
+    adc _tick
     tay
     lda _sin_x, y
-    sta _sprites_x, x
+    sta _msprites_x, x
 
     // and similar but off-frequency lookup for y
     txa
@@ -240,11 +238,11 @@ update_sprites_xy:
     asl
     asl
     clc
-    adc _frame
-    adc _frame
+    adc _tick
+    adc _tick
     tay
     lda _sin_y, y
-    sta _sprites_y, x
+    sta _msprites_y, x
   
     // and repeat for each sprite
     inx
@@ -259,7 +257,7 @@ update_sprites_xy:
 // Macros
 //
 // ------------------------------------------------------------
-enable_sprites:
+enable_psprites:
 {
     lda #$00
     .for(var i = 0; i < 8; i++)  {
