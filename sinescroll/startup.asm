@@ -60,6 +60,7 @@ main:
     sta C64__COLOR_BORDER
     inc _frame
 
+    jsr update_sprites_xy
     jsr clear_sort_table
     jsr sort_sprites
     jsr render_sprites
@@ -102,15 +103,8 @@ render_y:
     //inc C64__COLOR_BG // debug
 
     // render sprite x at position y
-    lda _sprite_idx
-    asl
-    asl
-    asl
-    clc
-    adc _frame
-    tax
-    lda _sin_x, x
-
+    ldx _sprite_idx
+    lda _sprites_x, x
     ldx _sprite_idx2
     sta C64__SPRITE_POS + 0, x
 
@@ -152,24 +146,13 @@ sort_sprites:
 {
     ldx #$00 // x is sprite-id
 sort_loop:
-    // lookup y-position from sine-table using the sprite-id
-    // and frame counter as index
-    txa
-    asl
-    asl
-    asl
-    clc
-    adc _frame
-    adc _frame
-    tay
-    lda _sin_y, y
-    tay // y is sprite-y
-
     // store the sprite-id in the sort-table
+    ldy _sprites_y, x
     lda _sort_ytable, y
     cmp #$ff
     beq empty_row
 not_empty:
+    inc C64__COLOR_BG
     // TODO: implement
     jmp !+
 empty_row:
@@ -177,7 +160,7 @@ empty_row:
     sta _sort_ytable, y
 !:
     inx
-    cpx #NUM_SPRITES // remove line to get to 256 sprites
+    cpx #NUM_SPRITES
     bne sort_loop
     rts
 }
@@ -207,6 +190,51 @@ clear_sort_table:
     bne !-
     rts
 }
+
+// ------------------------------------------------------------
+//
+// Calculate sprite x and y positions.
+//
+// ------------------------------------------------------------
+_sprites_x:
+    .fill 256, $00
+_sprites_y:
+    .fill 256, $00
+
+update_sprites_xy:
+{
+    ldx #$00
+!:
+    // do some silly math to find a sine-table index for x
+    txa
+    asl
+    asl
+    asl
+    clc
+    adc _frame
+    tay
+    lda _sin_x, y
+    sta _sprites_x, x
+
+    // and similar but off-frequency lookup for y
+    txa
+    asl
+    asl
+    asl
+    clc
+    adc _frame
+    adc _frame
+    tay
+    lda _sin_y, y
+    sta _sprites_y, x
+  
+    // and repeat for each sprite
+    inx
+    cpx #NUM_SPRITES
+    bne !-
+    rts
+}
+
 
 // ------------------------------------------------------------
 //
