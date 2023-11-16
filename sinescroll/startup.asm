@@ -100,8 +100,6 @@ render_y:
     asl
     sta _sprite_idx2
 
-    //inc C64__COLOR_BG // debug
-
     // render sprite x at position y
     ldx _sprite_idx
     lda _sprites_x, x
@@ -120,6 +118,13 @@ render_y:
     adc #DATA_BLOCK + 1
     sta C64__SPRITE_POINTERS, x
 
+    // check linked list
+    ldx _sprite_idx
+    lda _sort_xlinks, x
+    cmp #$ff
+    beq !+
+    inc C64__COLOR_BG
+!:
     lda #$ff
     sta _free_y
 
@@ -142,25 +147,38 @@ render_done:
 // id in the sort-table.
 //
 // ------------------------------------------------------------
+_sort_sprite_id:
+    .byte $00
+
 sort_sprites:
 {
-    ldx #$00 // x is sprite-id
+    lda #$00
+    sta _sort_sprite_id
 sort_loop:
     // store the sprite-id in the sort-table
+    ldx _sort_sprite_id
     ldy _sprites_y, x
-    lda _sort_ytable, y
+    lda _sort_ytable, y // acc is cursor of linked-list
     cmp #$ff
     beq empty_row
+
 not_empty:
-    inc C64__COLOR_BG
-    // TODO: implement
+    tax                 // transfer linked-list cursor from acc to x
+    lda _sort_xlinks, x // read from linked-list using x
+    cmp #$ff            // compare with no-sprite identifier
+    bne not_empty       // loop until we found the tail
+
+    lda _sort_sprite_id
+    sta _sort_xlinks, x
     jmp !+
+
 empty_row:
     txa
     sta _sort_ytable, y
 !:
-    inx
-    cpx #NUM_SPRITES
+    inc _sort_sprite_id
+    lda _sort_sprite_id
+    cmp #NUM_SPRITES
     bne sort_loop
     rts
 }
