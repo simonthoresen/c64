@@ -48,8 +48,8 @@ main:
     .for (var i = 0; i < 11; i++) {
         lda #($30 + $16 * i)        
 !:
-        cmp C64__RASTER_LINE
-        bne !-
+        cmp C64__RASTER_LINE // 4 cycle
+        bne !- // 4 cycle
 
         inc C64__COLOR_BORDER
         clc

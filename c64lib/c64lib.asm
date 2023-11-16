@@ -171,6 +171,9 @@ no_carry:
 // acc > arg:  Carry, !Zero,  !Neg
 // acc < arg: !Carry, !Zero,   Neg
 
+// acc = arg: BCS, BEQ, BPL
+// acc > arg: BCS, BNE, BPL
+// acc < arg: BCC, BNE, BMI
 
 // ------------------------------------------------------------
 //
@@ -404,9 +407,27 @@ no_carry:
 }
 
 .macro print_byte(src, pos_x, pos_y) {
+    push_state()    
     lda src
     ldx #(pos_y * 40 + pos_x)
     jsr print.byte
+    pop_state()
+}
+
+.macro push_state() {
+    pha
+    txa 
+    pha
+    tya
+    pha
+}
+
+.macro pop_state() {
+    pla
+    tay
+    pla
+    tax
+    pla
 }
 
 .namespace print {
