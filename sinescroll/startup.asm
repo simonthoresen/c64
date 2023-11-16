@@ -25,8 +25,8 @@ BasicUpstart2(startup)
 // Variables
 //
 // ------------------------------------------------------------
-_sin:
-    .fill 64, $18 + ($76 + $76 * sin(toRadians((i * 360) / 64)))
+_sin_x:
+    .fill 256, $18 + ($76 + $76 * sin(toRadians((i * 360) / 256)))
 _sin_y:
     .fill 256, $32 + ($5a + $5a * sin(toRadians((i * 360) / 256)))
 _text:
@@ -78,6 +78,8 @@ main:
 // ------------------------------------------------------------
 _sprite_idx: 
     .byte $00
+_sprite_idx2: 
+    .byte $00
 _free_y: 
     .byte $00
 
@@ -89,30 +91,34 @@ render_sprites:
 
     ldy #$00 // current row in the sort-table
 render_y:   
-    ldx _sort_ytable, y // x is sprite-id
-    cpx #$ff
+    lda _sort_ytable, y // x is sprite-id
+    cmp #$ff
     beq next_y
+
+    sta _sprite_idx
+    asl
+    sta _sprite_idx2
 
     inc C64__COLOR_BG // debug
 
     // render sprite x at position y
-    txa
-    pha
+    lda _sprite_idx
     asl
-    tax 
-
     clc
-    asl
-    asl
-    asl
-    adc #$18
+    adc _frame
+    tax
+    lda _sin_x, x
+
+    ldx _sprite_idx2
     sta C64__SPRITE_POS + 0, x
 
+    // store y coord
+    ldx _sprite_idx2
     tya
     sta C64__SPRITE_POS + 1, x
 
-    pla
-    tax
+    ldx _sprite_idx
+    txa
 
     clc
     adc #DATA_BLOCK + 1
