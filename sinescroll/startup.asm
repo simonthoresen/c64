@@ -99,10 +99,12 @@ render_y:
     asl
     sta _sprite_idx2
 
-    inc C64__COLOR_BG // debug
+    //inc C64__COLOR_BG // debug
 
     // render sprite x at position y
     lda _sprite_idx
+    asl
+    asl
     asl
     clc
     adc _frame
@@ -155,7 +157,9 @@ sort_loop:
     txa
     asl
     asl
+    asl
     clc
+    adc _frame
     adc _frame
     tay
     lda _sin_y, y
