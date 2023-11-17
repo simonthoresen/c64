@@ -25,8 +25,10 @@ BasicUpstart2(startup)
 // Variables
 //
 // ------------------------------------------------------------
-_sin_x:
-    .fill 256, $18 + ($76 + $76 * sin(toRadians((i * 360) / 256)))
+_sin_xl:
+    .fill 256, ($18 + $94 + $94 * cos(toRadians((i * 360) / 256))) & $ff
+_sin_xh:
+    .fill 256, ($18 + $94 + $94 * cos(toRadians((i * 360) / 256))) >> 8
 _sin_y:
     .fill 256, $32 + ($5a + $5a * sin(toRadians((i * 360) / 256)))
 _text:
@@ -36,7 +38,9 @@ _tick:
     .byte $00    
 _msprite_id:
     .byte $00
-_msprites_x:
+_msprites_xl:
+    .fill 256, $00
+_msprites_xh:
     .fill 256, $00
 _msprites_y:
     .fill 256, $00
@@ -44,7 +48,13 @@ _y_to_msprite:
     .fill 256, $00
 _next_msprite:
     .fill 256, $00
+_msprites_gfx:
+    .fill 256, $01 + i //mod(i, FONT.size() - 1)
 
+BIT_MASK:
+    .byte $01, $02, $04, $08, $10, $20, $40, $80
+BIT_MASK_INV:
+    .byte $fe, $fd, $fb, $f7, $ef, $df, $bf, $7f
 
 
 // ------------------------------------------------------------
@@ -63,9 +73,9 @@ startup:
 main:
     lda #$00
     sta C64__COLOR_BORDER
-.for (var i = 0; i < 1; i++) {
-    wait_vblank()
-}
+    .for (var i = 0; i < 1; i++) {
+        wait_vblank()
+    }
     lda #$02
     sta C64__COLOR_BORDER
     inc _tick
@@ -87,66 +97,84 @@ main:
 // that it can be reused.
 //
 // ------------------------------------------------------------
-_sprite_idx: 
-    .byte $00
-_sprite_idx2: 
-    .byte $00
-_free_y: 
-    .byte $00
+_render_y: .byte $00
 
 render_sprites:
 {
     lda #$00
-    sta _sprite_idx
-    sta _free_y
+    sta _render_y
 
-    ldy #$00 // current row in the sort-table
-render_y:   
-    lda _y_to_msprite, y // x is sprite-id
+render_y:
+    ldx _render_y
+    lda _y_to_msprite, x
     cmp #$ff
     beq next_y
+!:  
+    sta _msprite_id
+    jsr render_msprite
 
-    sta _sprite_idx
-    asl
-    sta _sprite_idx2
-
-    // render sprite x at position y
-    ldx _sprite_idx
-    lda _msprites_x, x
-    ldx _sprite_idx2
-    sta C64__SPRITE_POS + 0, x
-
-    // store y coord
-    ldx _sprite_idx2
-    tya
-    sta C64__SPRITE_POS + 1, x
-
-    ldx _sprite_idx
-    txa
-
-    clc
-    adc #DATA_BLOCK + 1
-    sta C64__SPRITE_POINTERS, x
-
-    // check linked list
-    ldx _sprite_idx
+    ldx _msprite_id
     lda _next_msprite, x
     cmp #$ff
-    beq !+
-    inc C64__COLOR_BG
-!:
-    lda #$ff
-    sta _free_y
+    bne !-
 
 next_y:
-    iny
-    beq render_done // y looped, we are done
-    //cpy _free_y
-    //bmi next_y // ignore y if we have no free sprite
-    //print_byte(_free_y, 6, 3)
+    inc _render_y
+    beq !+
     jmp render_y
+!:
+    rts
+}
 
-render_done:
+
+_psprite_id: 
+    .byte $00
+_psprite_id_x2: 
+    .byte $00
+_free_y: 
+    .byte $00
+
+render_msprite:
+{
+    lda _msprite_id
+    sta _psprite_id
+    asl
+    sta _psprite_id_x2
+
+    // store x coord
+    ldx _msprite_id
+    lda _msprites_xl, x
+    ldx _psprite_id_x2
+    sta C64__SPRITE_POS + 0, x
+
+    ldx _msprite_id
+    lda _msprites_xh, x
+    cmp #$00
+    beq no_upper
+upper_on:
+    ldx _psprite_id
+    lda BIT_MASK, x
+    ora C64__SPRITE_POS_UPPER
+    sta C64__SPRITE_POS_UPPER
+    jmp !+
+no_upper:
+    ldx _psprite_id
+    lda BIT_MASK_INV, x
+    and C64__SPRITE_POS_UPPER
+    sta C64__SPRITE_POS_UPPER
+!:
+
+    // store y coord
+    ldx _psprite_id_x2
+    lda _render_y
+    sta C64__SPRITE_POS + 1, x
+
+    ldx _msprite_id
+    lda _msprites_gfx, x
+    clc
+    adc #DATA_BLOCK
+    ldx _psprite_id
+    sta C64__SPRITE_POINTERS, x
     rts
 }
 
@@ -229,8 +257,10 @@ tick_msprites:
     clc
     adc _tick
     tay
-    lda _sin_x, y
-    sta _msprites_x, x
+    lda _sin_xl, y
+    sta _msprites_xl, x
+    lda _sin_xh, y
+    sta _msprites_xh, x
 
     // and similar but off-frequency lookup for y
     txa
@@ -238,6 +268,7 @@ tick_msprites:
     asl
     asl
     clc
+    adc _tick
     adc _tick
     adc _tick
     tay
