@@ -80,11 +80,17 @@ main:
         wait_vblank()
     }
     inc _tick
-    
-    jsr tick_vsprites
-    jsr clear_ysort_table
-    jsr ysort_sprites
-    jsr rsort_sprites
+
+    inc C64__COLOR_BORDER    
+    jsr tick_vsprites // white
+    inc C64__COLOR_BORDER
+    jsr clear_ysort_table // red
+    inc C64__COLOR_BORDER
+    jsr ysort_sprites // cyan
+    inc C64__COLOR_BORDER
+    jsr rsort_sprites // purple
+    lda #$00
+    sta C64__COLOR_BORDER
     jsr render_sprites
 
     jmp main
@@ -202,13 +208,41 @@ no_upper:
 
 // ------------------------------------------------------------
 //
-// Sprites are sorted by iterating through all sprites to 
-// compute their updated y-position, and then registering their
-// id in the sort-table.
+// Now sort the msprites by y-coord, and compute the necessary
+// wait that should happen after rendering it for multiplexing
+// to work.
 //
 // ------------------------------------------------------------
+.label RSORT_IDX = C64__ZEROP_BYTE
+
 rsort_sprites:
 {
+    ldy #$00
+    sty RSORT_IDX
+sort_y:
+    // look for a sprite in the y-table
+    lda _ysort_mhead, y
+    cmp #$ff
+    beq next_y
+!:  
+    // found one, insert in rsort list
+    ldx RSORT_IDX
+    sta _rsort_vsprite, x
+    inc RSORT_IDX
+
+    // look for a next-sprite behind it
+    tax
+    lda _ysort_mnext, x
+    cmp #$ff
+    bne !- // found one, loop back
+
+next_y:
+    // no more sprites on this y, increment
+    iny
+    beq !+
+    jmp sort_y
+!:
+    // all ys checked, return
     rts
 }
 
