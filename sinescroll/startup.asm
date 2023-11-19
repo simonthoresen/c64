@@ -37,17 +37,21 @@ _text:
     .byte $ff
 _tick:
     .byte $00    
-_msprites_xl:
+_vsprites_xl:
     .fill NUM_SPRITES, $00
-_msprites_xh:
+_vsprites_xh:
     .fill NUM_SPRITES, $00
-_msprites_y:
+_vsprites_y:
     .fill NUM_SPRITES, $00
-_msprites_gfx:
+_vsprites_gfx:
     .fill NUM_SPRITES, DATA_BLOCK + index_of(TEXT.charAt(mod(i, TEXT.size())), FONT)
-_y_to_msprite:
-    .fill 256, $00
-_next_msprite:
+_ysort_mhead:
+    .fill 256, $ff
+_ysort_mnext:
+    .fill NUM_SPRITES, $ff
+_rsort_vsprite:
+    .fill NUM_SPRITES, $ff
+_rsort_ywait:
     .fill NUM_SPRITES, $00
 
 BIT_MASK:
@@ -77,9 +81,10 @@ main:
     }
     inc _tick
     
-    jsr tick_msprites
-    jsr clear_sort_table
-    jsr sort_sprites
+    jsr tick_vsprites
+    jsr clear_ysort_table
+    jsr ysort_sprites
+    jsr rsort_sprites
     jsr render_sprites
 
     jmp main
@@ -98,7 +103,7 @@ main:
 /*
 _render_y:
     .byte $00
-_msprite_id:
+_vsprite_id:
     .byte $00
 _psprite_id: 
     .byte $00
@@ -106,7 +111,7 @@ _psprite_id_x2:
     .byte $00
 */
 .label _render_y = C64__ZEROP_WORD1_LO
-.label _msprite_id = C64__ZEROP_WORD1_HI
+.label _vsprite_id = C64__ZEROP_WORD1_HI
 .label _psprite_id = C64__ZEROP_WORD2_LO
 .label _psprite_id_x2 = C64__ZEROP_WORD2_HI
 
@@ -118,18 +123,18 @@ render_sprites:
 render_y:
     // look for a sprite in the y-table
     ldx _render_y
-    lda _y_to_msprite, x
+    lda _ysort_mhead, x
     cmp #$ff
     beq next_y
 !:  
     // found it, now render it
-    sta _msprite_id
+    sta _vsprite_id
     inc C64__COLOR_BORDER
-    jsr render_msprite
+    jsr render_vsprite
 
     // look for a next-sprite behind it
-    ldx _msprite_id
-    lda _next_msprite, x
+    ldx _vsprite_id
+    lda _ysort_mnext, x
     cmp #$ff
     bne !- // found one, loop back
 
@@ -144,7 +149,7 @@ next_y:
 }
 
 
-render_msprite:
+render_vsprite:
 {
     inc _psprite_id
     and #$07
@@ -153,20 +158,20 @@ render_msprite:
     sta _psprite_id_x2
 
 /*
-    lda _msprite_id
+    lda _vsprite_id
     sta _psprite_id
     asl
     sta _psprite_id_x2
 */
 
     // store x coord
-    ldx _msprite_id
-    lda _msprites_xl, x
+    ldx _vsprite_id
+    lda _vsprites_xl, x
     ldx _psprite_id_x2
     sta C64__SPRITE_POS + 0, x
 
-    ldx _msprite_id
-    lda _msprites_xh, x
+    ldx _vsprite_id
+    lda _vsprites_xh, x
     cmp #$00
     beq no_upper
 upper_on:
@@ -187,12 +192,13 @@ no_upper:
     lda _render_y
     sta C64__SPRITE_POS + 1, x
 
-    ldx _msprite_id
-    lda _msprites_gfx, x
+    ldx _vsprite_id
+    lda _vsprites_gfx, x
     ldx _psprite_id
     sta C64__SPRITE_POINTERS, x
     rts
 }
+
 
 // ------------------------------------------------------------
 //
@@ -201,35 +207,48 @@ no_upper:
 // id in the sort-table.
 //
 // ------------------------------------------------------------
-sort_sprites:
+rsort_sprites:
+{
+    rts
+}
+
+
+// ------------------------------------------------------------
+//
+// Run through all virtual sprites in sequence and register 
+// them in the y-sort table. If multiple sprites appear on the
+// same y coordinate, use a linked-list to manage those.
+//
+// ------------------------------------------------------------
+ysort_sprites:
 {
     lda #$00
-    sta _msprite_id
+    sta _vsprite_id
 
 sort_loop:
-    ldx _msprite_id
-    ldy _msprites_y, x
-    lda _y_to_msprite, y // acc is cursor of linked-list
+    ldx _vsprite_id
+    ldy _vsprites_y, x
+    lda _ysort_mhead, y // acc is cursor of linked-list
     cmp #$ff
     beq empty_row
 
 not_empty:
     tax                  // transfer linked-list cursor from acc to x
-    lda _next_msprite, x // read from linked-list using x
+    lda _ysort_mnext, x // read from linked-list using x
     cmp #$ff             // compare with no-sprite identifier
     bne not_empty        // loop until we found the tail
 
-    lda _msprite_id
-    sta _next_msprite, x
+    lda _vsprite_id
+    sta _ysort_mnext, x
     jmp continue
 
 empty_row:
     txa
-    sta _y_to_msprite, y
+    sta _ysort_mhead, y
 
 continue:
-    inc _msprite_id
-    lda _msprite_id
+    inc _vsprite_id
+    lda _vsprite_id
     cmp #NUM_SPRITES
     bne sort_loop
     rts
@@ -244,18 +263,18 @@ continue:
 // indexed by the sprite id.
 //
 // ------------------------------------------------------------
-clear_sort_table:
+clear_ysort_table:
 {
     lda #$ff
     ldx #$00
 !:
-    sta _y_to_msprite, x
-    sta _next_msprite, x
+    sta _ysort_mhead, x
+    sta _ysort_mnext, x
     inx
     cpx #NUM_SPRITES
     bne !-
 !:
-    sta _y_to_msprite, x
+    sta _ysort_mhead, x
     inx
     bne !-
     rts
@@ -266,7 +285,7 @@ clear_sort_table:
 // Calculate sprite x and y positions.
 //
 // ------------------------------------------------------------
-tick_msprites:
+tick_vsprites:
 {
     ldx #$00
 !:
@@ -280,9 +299,9 @@ tick_msprites:
     adc _tick
     tay
     lda _sin_xl, y
-    sta _msprites_xl, x
+    sta _vsprites_xl, x
     lda _sin_xh, y
-    sta _msprites_xh, x
+    sta _vsprites_xh, x
 
     // and similar but off-frequency lookup for y
     txa
@@ -296,7 +315,7 @@ tick_msprites:
     adc _tick
     tay
     lda _sin_y, y
-    sta _msprites_y, x
+    sta _vsprites_y, x
  
     // and repeat for each sprite
     inx
