@@ -8,7 +8,7 @@ BasicUpstart2(startup)
 .label ADR_DATA = $2000
 .label DATA_BLOCK = ADR_DATA/64
 .const FONT = " abcdefghijklmnopqrstuvwxyz0123456789"
-.const TEXT = "the quick brown fox jumps over the lazy dog "
+.const TEXT = "abcdefgh the quick brown fox jumps over the lazy dog "
 .const NUM_SPRITES = $08
 
 // ------------------------------------------------------------
@@ -49,12 +49,12 @@ _y_to_msprite:
 _next_msprite:
     .fill 256, $00
 _msprites_gfx:
-    .fill 256, $01 + i //mod(i, FONT.size() - 1)
+    .fill 256, DATA_BLOCK + index_of(TEXT.charAt(mod(i, TEXT.size())), FONT)
 
 BIT_MASK:
-    .byte $01, $02, $04, $08, $10, $20, $40, $80
+    .fill 8, (1 << i) & $ff
 BIT_MASK_INV:
-    .byte $fe, $fd, $fb, $f7, $ef, $df, $bf, $7f
+    .fill 8, (1 << i) ^ $ff
 
 
 // ------------------------------------------------------------
@@ -97,7 +97,8 @@ main:
 // that it can be reused.
 //
 // ------------------------------------------------------------
-_render_y: .byte $00
+_render_y:
+    .byte $00
 
 render_sprites:
 {
@@ -105,24 +106,29 @@ render_sprites:
     sta _render_y
 
 render_y:
+    // look for a sprite in the y-table
     ldx _render_y
     lda _y_to_msprite, x
     cmp #$ff
     beq next_y
 !:  
+    // found it, now render it
     sta _msprite_id
     jsr render_msprite
 
+    // look for a next-sprite behind it
     ldx _msprite_id
     lda _next_msprite, x
     cmp #$ff
-    bne !-
+    bne !- // found one, loop back
 
 next_y:
+    // no more sprites on this y, increment
     inc _render_y
     beq !+
     jmp render_y
 !:
+    // all ys checked, return
     rts
 }
 
@@ -136,10 +142,18 @@ _free_y:
 
 render_msprite:
 {
+    inc _psprite_id
+    and #$07
+    sta _psprite_id
+    asl
+    sta _psprite_id_x2
+
+/*
     lda _msprite_id
     sta _psprite_id
     asl
     sta _psprite_id_x2
+*/
 
     // store x coord
     ldx _msprite_id
@@ -171,8 +185,6 @@ no_upper:
 
     ldx _msprite_id
     lda _msprites_gfx, x
-    clc
-    adc #DATA_BLOCK
     ldx _psprite_id
     sta C64__SPRITE_POINTERS, x
     rts
