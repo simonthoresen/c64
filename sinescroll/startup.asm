@@ -9,7 +9,8 @@ BasicUpstart2(startup)
 .label DATA_BLOCK = ADR_DATA/64
 .const FONT = " abcdefghijklmnopqrstuvwxyz0123456789"
 .const TEXT = "abcdefgh the quick brown fox jumps over the lazy dog "
-.const NUM_SPRITES = $08
+.const NUM_SPRITES = $09
+
 
 // ------------------------------------------------------------
 //
@@ -39,17 +40,17 @@ _tick:
 _msprite_id:
     .byte $00
 _msprites_xl:
-    .fill 256, $00
+    .fill NUM_SPRITES, $00
 _msprites_xh:
-    .fill 256, $00
+    .fill NUM_SPRITES, $00
 _msprites_y:
-    .fill 256, $00
+    .fill NUM_SPRITES, $00
 _y_to_msprite:
     .fill 256, $00
 _next_msprite:
-    .fill 256, $00
+    .fill NUM_SPRITES, $00
 _msprites_gfx:
-    .fill 256, DATA_BLOCK + index_of(TEXT.charAt(mod(i, TEXT.size())), FONT)
+    .fill NUM_SPRITES, DATA_BLOCK + index_of(TEXT.charAt(mod(i, TEXT.size())), FONT)
 
 BIT_MASK:
     .fill 8, (1 << i) & $ff
@@ -247,6 +248,11 @@ clear_sort_table:
 !:
     sta _y_to_msprite, x
     sta _next_msprite, x
+    inx
+    cpx #NUM_SPRITES
+    bne !-
+!:
+    sta _y_to_msprite, x
     inx
     bne !-
     rts
