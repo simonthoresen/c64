@@ -9,8 +9,7 @@ BasicUpstart2(startup)
 .label DATA_BLOCK = ADR_DATA/64
 .const FONT = " abcdefghijklmnopqrstuvwxyz0123456789"
 .const TEXT = "abcdefghijklmnopqrstuvwxyz"
-.const NUM_SPRITES = $0f
-.const MAX_SPRITES = $40
+.const NUM_SPRITES = $08
 
 
 // ------------------------------------------------------------
@@ -44,12 +43,12 @@ _msprites_xh:
     .fill NUM_SPRITES, $00
 _msprites_y:
     .fill NUM_SPRITES, $00
+_msprites_gfx:
+    .fill NUM_SPRITES, DATA_BLOCK + index_of(TEXT.charAt(mod(i, TEXT.size())), FONT)
 _y_to_msprite:
     .fill 256, $00
 _next_msprite:
     .fill NUM_SPRITES, $00
-_msprites_gfx:
-    .fill NUM_SPRITES, DATA_BLOCK + index_of(TEXT.charAt(mod(i, TEXT.size())), FONT)
 
 BIT_MASK:
     .fill 8, (1 << i) & $ff
@@ -117,8 +116,6 @@ render_sprites:
     sta _render_y
 
 render_y:
-    inc C64__COLOR_BORDER
-
     // look for a sprite in the y-table
     ldx _render_y
     lda _y_to_msprite, x
@@ -127,6 +124,7 @@ render_y:
 !:  
     // found it, now render it
     sta _msprite_id
+    inc C64__COLOR_BORDER
     jsr render_msprite
 
     // look for a next-sprite behind it
@@ -270,7 +268,7 @@ clear_sort_table:
 // ------------------------------------------------------------
 tick_msprites:
 {
-    ldx #NUM_SPRITES
+    ldx #$00
 !:
     // do some silly math to find a sine-table index for x
     txa
@@ -301,8 +299,9 @@ tick_msprites:
     sta _msprites_y, x
  
     // and repeat for each sprite
-    dex
-    bpl !- 
+    inx
+    cpx #NUM_SPRITES
+    bne !-
     rts
 }
 
