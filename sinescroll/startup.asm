@@ -9,7 +9,7 @@ BasicUpstart2(startup)
 .label DATA_BLOCK = ADR_DATA/64
 .const FONT = " abcdefghijklmnopqrstuvwxyz0123456789"
 .const TEXT = "012345678901234567890"
-.const NUM_SPRITES = $0a
+.const NUM_SPRITES = $18
 
 
 // ------------------------------------------------------------
@@ -30,7 +30,9 @@ BasicUpstart2(startup)
     .return $18 + $94 + $94 * cos(toRadians((i * 1 * 360) / 256))
 }
 .function path_y(i) {
-    .return $32 + $5a + $5a * sin(toRadians((i * 2 * 360) / 256))
+//    .return $32 + $5a + $5a * sin(toRadians((i * 3 * 360) / 256))
+//    .return $40 + $50 + $50 * sin(toRadians((i * 3 * 360) / 256))
+    .return $60 + $40 + $40 * sin(toRadians((i * 3 * 360) / 256))
 }
 _path_xl:
     .fill 256, path_x(i) & $ff
@@ -116,11 +118,17 @@ main:
 .label _psprite_id1 = C64__ZEROP_WORD2_LO
 .label _psprite_id2 = C64__ZEROP_WORD2_HI
 
+_psprites_done:
+    .fill 8, $00
+
 render_rsort:
 {
     lda #$00
     sta _psprite_id1
     sta _psprite_id2
+    .for (var i = 0; i < 8; i++) {
+        sta _psprites_done + i
+    }
 
     ldy #$00    
 !:
@@ -145,6 +153,12 @@ render_vsprite:
     sta _psprite_id1
     asl
     sta _psprite_id2
+
+    ldx _psprite_id1
+    lda _psprites_done, x
+!:
+    cmp C64__RASTER_LINE
+    bpl !-
 
     // store x coord
     ldx _vsprite_id
@@ -173,6 +187,12 @@ no_upper:
     lda _vsprites_y, x
     ldx _psprite_id2
     sta C64__SPRITE_POS + 1, x
+
+    // register boundary y
+    clc
+    adc #$15
+    ldx _psprite_id1
+    sta _psprites_done, x
 
     // store gfx pointer
     ldx _vsprite_id
@@ -203,13 +223,16 @@ sort_y:
 !:  
     // found one, insert in rsort list
     ldx RSORT_IDX
+    inc RSORT_IDX
     sta _rsort_vsprite, x
 
-/* fix this: */
-//    lda #$00
-//    sta _rsort_ywait, x
-/* end fix */
-    inc RSORT_IDX
+    // borrow acc to compute ywait
+    pha
+    tya
+    clc
+    adc #$15
+    sta _rsort_ywait, x
+    pla
 
     // look for a next-sprite behind it
     tax
