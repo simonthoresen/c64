@@ -8,8 +8,9 @@ BasicUpstart2(startup)
 .label ADR_DATA = $2000
 .label DATA_BLOCK = ADR_DATA/64
 .const FONT = " abcdefghijklmnopqrstuvwxyz0123456789"
-.const TEXT = "abcdefgh the quick brown fox jumps over the lazy dog "
-.const NUM_SPRITES = $09
+.const TEXT = "abcdefghijklmnopqrstuvwxyz"
+.const NUM_SPRITES = $0f
+.const MAX_SPRITES = $40
 
 
 // ------------------------------------------------------------
@@ -37,8 +38,6 @@ _text:
     .byte $ff
 _tick:
     .byte $00    
-_msprite_id:
-    .byte $00
 _msprites_xl:
     .fill NUM_SPRITES, $00
 _msprites_xh:
@@ -77,14 +76,13 @@ main:
     .for (var i = 0; i < 1; i++) {
         wait_vblank()
     }
-    lda #$02
-    sta C64__COLOR_BORDER
     inc _tick
-
+    
     jsr tick_msprites
     jsr clear_sort_table
     jsr sort_sprites
     jsr render_sprites
+
     jmp main
 
 
@@ -98,8 +96,20 @@ main:
 // that it can be reused.
 //
 // ------------------------------------------------------------
+/*
 _render_y:
     .byte $00
+_msprite_id:
+    .byte $00
+_psprite_id: 
+    .byte $00
+_psprite_id_x2: 
+    .byte $00
+*/
+.label _render_y = C64__ZEROP_WORD1_LO
+.label _msprite_id = C64__ZEROP_WORD1_HI
+.label _psprite_id = C64__ZEROP_WORD2_LO
+.label _psprite_id_x2 = C64__ZEROP_WORD2_HI
 
 render_sprites:
 {
@@ -107,6 +117,8 @@ render_sprites:
     sta _render_y
 
 render_y:
+    inc C64__COLOR_BORDER
+
     // look for a sprite in the y-table
     ldx _render_y
     lda _y_to_msprite, x
@@ -133,13 +145,6 @@ next_y:
     rts
 }
 
-
-_psprite_id: 
-    .byte $00
-_psprite_id_x2: 
-    .byte $00
-_free_y: 
-    .byte $00
 
 render_msprite:
 {
@@ -265,10 +270,11 @@ clear_sort_table:
 // ------------------------------------------------------------
 tick_msprites:
 {
-    ldx #$00
+    ldx #NUM_SPRITES
 !:
     // do some silly math to find a sine-table index for x
     txa
+    eor #$ff
     asl
     asl
     asl
@@ -282,6 +288,7 @@ tick_msprites:
 
     // and similar but off-frequency lookup for y
     txa
+    eor #$ff
     asl
     asl
     asl
@@ -292,11 +299,10 @@ tick_msprites:
     tay
     lda _sin_y, y
     sta _msprites_y, x
-  
+ 
     // and repeat for each sprite
-    inx
-    cpx #NUM_SPRITES
-    bne !-
+    dex
+    bpl !- 
     rts
 }
 

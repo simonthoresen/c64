@@ -3,15 +3,6 @@
 // C64 constants
 //
 // ------------------------------------------------------------
-.label C64__ARG0_LO             = $0002
-.label C64__ARG0_HI             = $0003
-.label C64__ARG0                = C64__ARG0_LO
-.label C64__ARG1_LO             = $0004
-.label C64__ARG1_HI             = $0005
-.label C64__ARG1                = C64__ARG1_LO
-.label C64__ARG2_LO             = $00fb
-.label C64__ARG2_HI             = $00fc
-.label C64__ARG2                = C64__ARG2_LO
 .label C64__COLOR               = $0286
 .const C64__COLOR_BORDER        = $d020
 .const C64__COLOR_BG0           = $d021
@@ -49,12 +40,27 @@
 .label C64__SPRITE_POINTERS     = $07f8
 .label C64__SPRITE_POS          = $d000
 .label C64__SPRITE_POS_UPPER    = $d010
-.label C64__ZEROP_BYTE1         = $002a
+.label C64__ZEROP_BYTE1         = $2a
 .label C64__ZEROP_BYTE          = C64__ZEROP_BYTE1
-.label C64__ZEROP_BYTE2         = $0052
-.label C64__ZEROP_WORD_LO       = $00fd
-.label C64__ZEROP_WORD_HI       = $00fe
-.label C64__ZEROP_WORD          = C64__ZEROP_WORD_LO
+.label C64__ZEROP_BYTE2         = $52
+.label C64__ZEROP_WORD1_LO      = $02
+.label C64__ZEROP_WORD1_HI      = $03
+.label C64__ZEROP_WORD1         = C64__ZEROP_WORD_LO
+.label C64__ZEROP_WORD_LO       = C64__ZEROP_WORD1_LO
+.label C64__ZEROP_WORD_HI       = C64__ZEROP_WORD1_HI
+.label C64__ZEROP_WORD          = C64__ZEROP_WORD1_LO
+.label C64__ZEROP_WORD2_LO      = $04
+.label C64__ZEROP_WORD2_HI      = $05
+.label C64__ZEROP_WORD2         = C64__ZEROP_WORD_LO
+.label C64__ZEROP_WORD3_LO      = $fb
+.label C64__ZEROP_WORD3_HI      = $fc
+.label C64__ZEROP_WORD3         = C64__ZEROP_WORD_LO
+.label C64__ZEROP_WORD4_LO      = $fd
+.label C64__ZEROP_WORD4_HI      = $fe
+.label C64__ZEROP_WORD4         = C64__ZEROP_WORD_LO
+
+
+
 
 .label C64__BLACK               = $00
 .label C64__WHITE               = $01
