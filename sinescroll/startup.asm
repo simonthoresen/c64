@@ -8,8 +8,8 @@ BasicUpstart2(startup)
 .label ADR_DATA = $2000
 .label DATA_BLOCK = ADR_DATA/64
 .const FONT = " abcdefghijklmnopqrstuvwxyz0123456789"
-.const TEXT = "abcdefghijklmnopqrstuvwxyz"
-.const NUM_SPRITES = $08
+.const TEXT = "012345678901234567890"
+.const NUM_SPRITES = $0a
 
 
 // ------------------------------------------------------------
@@ -26,12 +26,18 @@ BasicUpstart2(startup)
 // Variables
 //
 // ------------------------------------------------------------
-_sin_xl:
-    .fill 256, ($18 + $94 + $94 * cos(toRadians((i * 360) / 256))) & $ff
-_sin_xh:
-    .fill 256, ($18 + $94 + $94 * cos(toRadians((i * 360) / 256))) >> 8
-_sin_y:
-    .fill 256, $32 + ($5a + $5a * sin(toRadians((i * 360) / 256)))
+.function path_x(i) {
+    .return $18 + $94 + $94 * cos(toRadians((i * 1 * 360) / 256))
+}
+.function path_y(i) {
+    .return $32 + $5a + $5a * sin(toRadians((i * 2 * 360) / 256))
+}
+_path_xl:
+    .fill 256, path_x(i) & $ff
+_path_xh:
+    .fill 256, path_x(i) >> 8
+_path_y:
+    .fill 256, path_y(i)
 _text:
     .fill TEXT.size(), index_of(TEXT.charAt(i), FONT)
     .byte $ff
@@ -45,9 +51,9 @@ _vsprites_y:
     .fill NUM_SPRITES, $00
 _vsprites_gfx:
     .fill NUM_SPRITES, DATA_BLOCK + index_of(TEXT.charAt(mod(i, TEXT.size())), FONT)
-_ysort_mhead:
+_ysort_vhead:
     .fill 256, $ff
-_ysort_mnext:
+_ysort_vnext:
     .fill NUM_SPRITES, $ff
 _rsort_vsprite:
     .fill NUM_SPRITES, $ff
@@ -91,7 +97,7 @@ main:
     jsr rsort_sprites // purple
     lda #$00
     sta C64__COLOR_BORDER
-    jsr render_sprites
+    jsr render_rsort
 
     jmp main
 
@@ -106,101 +112,72 @@ main:
 // that it can be reused.
 //
 // ------------------------------------------------------------
-/*
-_render_y:
-    .byte $00
-_vsprite_id:
-    .byte $00
-_psprite_id: 
-    .byte $00
-_psprite_id_x2: 
-    .byte $00
-*/
-.label _render_y = C64__ZEROP_WORD1_LO
-.label _vsprite_id = C64__ZEROP_WORD1_HI
-.label _psprite_id = C64__ZEROP_WORD2_LO
-.label _psprite_id_x2 = C64__ZEROP_WORD2_HI
+.label _vsprite_id  = C64__ZEROP_WORD1_LO
+.label _psprite_id1 = C64__ZEROP_WORD2_LO
+.label _psprite_id2 = C64__ZEROP_WORD2_HI
 
-render_sprites:
+render_rsort:
 {
     lda #$00
-    sta _render_y
+    sta _psprite_id1
+    sta _psprite_id2
 
-render_y:
-    // look for a sprite in the y-table
-    ldx _render_y
-    lda _ysort_mhead, x
-    cmp #$ff
-    beq next_y
-!:  
-    // found it, now render it
-    sta _vsprite_id
+    ldy #$00    
+!:
     inc C64__COLOR_BORDER
+
+    lda _rsort_vsprite, y
+    sta _vsprite_id
     jsr render_vsprite
 
-    // look for a next-sprite behind it
-    ldx _vsprite_id
-    lda _ysort_mnext, x
-    cmp #$ff
-    bne !- // found one, loop back
+    iny
+    cpy #NUM_SPRITES
+    bne !-
 
-next_y:
-    // no more sprites on this y, increment
-    inc _render_y
-    beq !+
-    jmp render_y
-!:
-    // all ys checked, return
     rts
 }
 
-
 render_vsprite:
 {
-    inc _psprite_id
+    inc _psprite_id1
+    lda _psprite_id1
     and #$07
-    sta _psprite_id
+    sta _psprite_id1
     asl
-    sta _psprite_id_x2
-
-/*
-    lda _vsprite_id
-    sta _psprite_id
-    asl
-    sta _psprite_id_x2
-*/
+    sta _psprite_id2
 
     // store x coord
     ldx _vsprite_id
     lda _vsprites_xl, x
-    ldx _psprite_id_x2
+    ldx _psprite_id2
     sta C64__SPRITE_POS + 0, x
 
     ldx _vsprite_id
     lda _vsprites_xh, x
-    cmp #$00
     beq no_upper
 upper_on:
-    ldx _psprite_id
+    ldx _psprite_id1
     lda BIT_MASK, x
     ora C64__SPRITE_POS_UPPER
     sta C64__SPRITE_POS_UPPER
     jmp !+
 no_upper:
-    ldx _psprite_id
+    ldx _psprite_id1
     lda BIT_MASK_INV, x
     and C64__SPRITE_POS_UPPER
     sta C64__SPRITE_POS_UPPER
 !:
 
     // store y coord
-    ldx _psprite_id_x2
-    lda _render_y
+    ldx _vsprite_id
+    lda _vsprites_y, x
+    ldx _psprite_id2
     sta C64__SPRITE_POS + 1, x
 
+    // store gfx pointer
     ldx _vsprite_id
     lda _vsprites_gfx, x
-    ldx _psprite_id
+    ldx _psprite_id1
     sta C64__SPRITE_POINTERS, x
     rts
 }
@@ -214,25 +191,29 @@ no_upper:
 //
 // ------------------------------------------------------------
 .label RSORT_IDX = C64__ZEROP_BYTE
-
 rsort_sprites:
 {
     ldy #$00
     sty RSORT_IDX
 sort_y:
     // look for a sprite in the y-table
-    lda _ysort_mhead, y
+    lda _ysort_vhead, y
     cmp #$ff
     beq next_y
 !:  
     // found one, insert in rsort list
     ldx RSORT_IDX
     sta _rsort_vsprite, x
+
+/* fix this: */
+//    lda #$00
+//    sta _rsort_ywait, x
+/* end fix */
     inc RSORT_IDX
 
     // look for a next-sprite behind it
     tax
-    lda _ysort_mnext, x
+    lda _ysort_vnext, x
     cmp #$ff
     bne !- // found one, loop back
 
@@ -262,23 +243,23 @@ ysort_sprites:
 sort_loop:
     ldx _vsprite_id
     ldy _vsprites_y, x
-    lda _ysort_mhead, y // acc is cursor of linked-list
+    lda _ysort_vhead, y // acc is cursor of linked-list
     cmp #$ff
     beq empty_row
 
 not_empty:
-    tax                  // transfer linked-list cursor from acc to x
-    lda _ysort_mnext, x // read from linked-list using x
-    cmp #$ff             // compare with no-sprite identifier
-    bne not_empty        // loop until we found the tail
+    tax                 // transfer linked-list cursor from acc to x
+    lda _ysort_vnext, x // read from linked-list using x
+    cmp #$ff            // compare with no-sprite identifier
+    bne not_empty       // loop until we found the tail
 
     lda _vsprite_id
-    sta _ysort_mnext, x
+    sta _ysort_vnext, x
     jmp continue
 
 empty_row:
     txa
-    sta _ysort_mhead, y
+    sta _ysort_vhead, y
 
 continue:
     inc _vsprite_id
@@ -299,18 +280,14 @@ continue:
 // ------------------------------------------------------------
 clear_ysort_table:
 {
+    // completely unrolled for performance
     lda #$ff
-    ldx #$00
-!:
-    sta _ysort_mhead, x
-    sta _ysort_mnext, x
-    inx
-    cpx #NUM_SPRITES
-    bne !-
-!:
-    sta _ysort_mhead, x
-    inx
-    bne !-
+    .for (var i = 0; i < NUM_SPRITES; i++) {
+        sta _ysort_vnext + i
+    }
+    .for (var i = 0; i < $ff; i++) {
+        sta _ysort_vhead + i
+    }    
     rts
 }
 
@@ -319,39 +296,27 @@ clear_ysort_table:
 // Calculate sprite x and y positions.
 //
 // ------------------------------------------------------------
+.label PATH_IDX = C64__ZEROP_BYTE
+
 tick_vsprites:
 {
+    lda _tick
+    sta PATH_IDX
+
     ldx #$00
 !:
-    // do some silly math to find a sine-table index for x
-    txa
-    eor #$ff
-    asl
-    asl
-    asl
-    clc
-    adc _tick
+    lda PATH_IDX
+    adc #$fc
+    sta PATH_IDX
     tay
-    lda _sin_xl, y
-    sta _vsprites_xl, x
-    lda _sin_xh, y
-    sta _vsprites_xh, x
 
-    // and similar but off-frequency lookup for y
-    txa
-    eor #$ff
-    asl
-    asl
-    asl
-    clc
-    adc _tick
-    adc _tick
-    adc _tick
-    tay
-    lda _sin_y, y
+    lda _path_xl, y
+    sta _vsprites_xl, x
+    lda _path_xh, y
+    sta _vsprites_xh, x
+    lda _path_y, y
     sta _vsprites_y, x
  
-    // and repeat for each sprite
     inx
     cpx #NUM_SPRITES
     bne !-
