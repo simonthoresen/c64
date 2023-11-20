@@ -40,27 +40,8 @@
 .label C64__SPRITE_POINTERS     = $07f8
 .label C64__SPRITE_POS          = $d000
 .label C64__SPRITE_POS_UPPER    = $d010
-.label C64__ZEROP_BYTE1         = $2a
-.label C64__ZEROP_BYTE          = C64__ZEROP_BYTE1
-.label C64__ZEROP_BYTE2         = $52
-.label C64__ZEROP_WORD1_LO      = $02
-.label C64__ZEROP_WORD1_HI      = $03
-.label C64__ZEROP_WORD1         = C64__ZEROP_WORD_LO
-.label C64__ZEROP_WORD_LO       = C64__ZEROP_WORD1_LO
-.label C64__ZEROP_WORD_HI       = C64__ZEROP_WORD1_HI
-.label C64__ZEROP_WORD          = C64__ZEROP_WORD1_LO
-.label C64__ZEROP_WORD2_LO      = $04
-.label C64__ZEROP_WORD2_HI      = $05
-.label C64__ZEROP_WORD2         = C64__ZEROP_WORD_LO
-.label C64__ZEROP_WORD3_LO      = $fb
-.label C64__ZEROP_WORD3_HI      = $fc
-.label C64__ZEROP_WORD3         = C64__ZEROP_WORD_LO
-.label C64__ZEROP_WORD4_LO      = $fd
-.label C64__ZEROP_WORD4_HI      = $fe
-.label C64__ZEROP_WORD4         = C64__ZEROP_WORD_LO
-
-
-
+.label C64__ZEROP_INTERNAL      = $02
+.label C64__ZEROP_FREE          = $10
 
 .label C64__BLACK               = $00
 .label C64__WHITE               = $01

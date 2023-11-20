@@ -20,6 +20,8 @@
 .label SPRITE__DATA_BLOCK = 17
 .label SPRITE__NUM_BYTES = 18
 
+.label SPRITE__ZEROP_WORD = C64__ZEROP_INTERAL + 0
+
 // ------------------------------------------------------------
 //
 // Object methods
@@ -126,11 +128,11 @@ no_color:
 
 .macro reference_frame(this)
 {
-	set__a16(C64__ZEROP_WORD, a16__get_sprite_anim(this))
+	set__a16(SPRITE__ZEROP_WORD, a16__get_sprite_anim(this))
 	ldy a8__get_sprite_frame(this)
 
 	clc
-	lda (C64__ZEROP_WORD),y
+	lda (SPRITE__ZEROP_WORD),y
 	adc a8__get_sprite_data_block(this)
 
 	ldx a8__get_sprite_id(this)
@@ -192,9 +194,9 @@ on_target_y:
 	sta a8__get_sprite_tick(this)
 	inc a8__get_sprite_frame(this)
 
-	set__a16(C64__ZEROP_WORD, a16__get_sprite_anim(this))
+	set__a16(SPRITE__ZEROP_WORD, a16__get_sprite_anim(this))
 	ldy a8__get_sprite_frame(this)
-	lda (C64__ZEROP_WORD),y
+	lda (SPRITE__ZEROP_WORD),y
 	cmp #$ff // end of anim
 	bne !+
 	ldy #$00
