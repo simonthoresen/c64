@@ -20,7 +20,7 @@
 .label SPRITE__DATA_BLOCK = 17
 .label SPRITE__NUM_BYTES = 18
 
-.label SPRITE__ZEROP_WORD = C64__ZEROP_INTERAL + 0
+.label SPRITE__ZEROP_WORD = C64__ZEROP_INTERNAL + 0
 
 // ------------------------------------------------------------
 //
