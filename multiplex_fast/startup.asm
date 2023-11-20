@@ -1,5 +1,12 @@
 BasicUpstart2(startup)
 
+// This program can bug out if the time spent sorting sprites 
+// does not align with the raster getting to reset back to the
+// top of the screen. This is because the raster-line wraps
+// just after the bottom border is hit. When we compute the 
+// boundary-y of a psprite, it can wrap back to top of the 
+// screen which the raster will suggest has already passed.
+
 // ------------------------------------------------------------
 //
 // Constants
@@ -8,7 +15,7 @@ BasicUpstart2(startup)
 .label ADR_DATA = $2000
 .label DATA_BLOCK = ADR_DATA/64
 .const FONT = " abcdefghijklmnopqrstuvwxyz0123456789"
-.const TEXT = "012345678901234567890"
+.const TEXT = "012345678901234567890123456789012"
 .const NUM_SPRITES = $18
 
 
@@ -20,6 +27,11 @@ BasicUpstart2(startup)
 *=ADR_DATA "Program Data"
 #import "data.asm"
 
+BIT_MASK:
+    .fill 8, (1 << i) & $ff
+BIT_MASK_INV:
+    .fill 8, (1 << i) ^ $ff
+
 
 // ------------------------------------------------------------
 //
@@ -30,9 +42,7 @@ BasicUpstart2(startup)
     .return $18 + $94 + $94 * cos(toRadians((i * 1 * 360) / 256))
 }
 .function path_y(i) {
-//    .return $32 + $5a + $5a * sin(toRadians((i * 3 * 360) / 256))
-//    .return $40 + $50 + $50 * sin(toRadians((i * 3 * 360) / 256))
-    .return $60 + $40 + $40 * sin(toRadians((i * 3 * 360) / 256))
+    .return $32 + $5a + $5a * sin(toRadians((i * 3 * 360) / 256))
 }
 _path_xl:
     .fill 256, path_x(i) & $ff
@@ -43,8 +53,10 @@ _path_y:
 _text:
     .fill TEXT.size(), index_of(TEXT.charAt(i), FONT)
     .byte $ff
+_frame:
+    .byte $00
 _tick:
-    .byte $00    
+    .byte $1d
 _vsprites_xl:
     .fill NUM_SPRITES, $00
 _vsprites_xh:
@@ -53,19 +65,14 @@ _vsprites_y:
     .fill NUM_SPRITES, $00
 _vsprites_gfx:
     .fill NUM_SPRITES, DATA_BLOCK + index_of(TEXT.charAt(mod(i, TEXT.size())), FONT)
-_ysort_vhead:
-    .fill 256, $ff
-_ysort_vnext:
-    .fill NUM_SPRITES, $ff
-_rsort_vsprite:
-    .fill NUM_SPRITES, $ff
-_rsort_ywait:
-    .fill NUM_SPRITES, $00
 
-BIT_MASK:
-    .fill 8, (1 << i) & $ff
-BIT_MASK_INV:
-    .fill 8, (1 << i) ^ $ff
+.label _vsprite_id  = $02
+.label _psprite_id1 = $03
+.label _psprite_id2 = $04
+.label _ysort_outer_i = $05
+.label _ysort_outer_v = $06
+.label _path_idx = $07
+.label _vsprites_ysort = $10 // ..NUM_SPRITES
 
 
 // ------------------------------------------------------------
@@ -81,26 +88,24 @@ startup:
     clear_screen($20)
     jsr enable_psprites
 
+    .for(var i = 0; i < NUM_SPRITES; i++) {
+        lda #i
+        sta _vsprites_ysort + i
+    }
 main:
     lda #$00
     sta C64__COLOR_BORDER
-    .for (var i = 0; i < 1; i++) {
-        wait_vblank()
-    }
-    inc _tick
+    wait_vblank()
+    inc _frame
 
     inc C64__COLOR_BORDER    
     jsr tick_vsprites // white
     inc C64__COLOR_BORDER
-    jsr ysort_sprites // red
+    jsr ysort_vsprites // red
     inc C64__COLOR_BORDER
-    jsr rsort_sprites // cyan
-    lda #$00
-    sta C64__COLOR_BORDER
-    jsr render_rsort
+    jsr render_vsprites // cyan
 
     jmp main
-
 
 
 // ------------------------------------------------------------
@@ -112,15 +117,10 @@ main:
 // that it can be reused.
 //
 // ------------------------------------------------------------
-.label _vsprite_id  = C64__ZEROP_WORD1_LO
-.label _psprite_id1 = C64__ZEROP_WORD1_HI
-.label _psprite_id2 = C64__ZEROP_WORD2_LO
-.label _rsprite_idx = C64__ZEROP_WORD2_HI
-
 _psprites_done:
     .fill 8, $00
 
-render_rsort:
+render_vsprites:
 {
     lda #$00
     sta _psprite_id1
@@ -128,26 +128,16 @@ render_rsort:
     .for (var i = 0; i < 8; i++) {
         sta _psprites_done + i
     }
-    sta _rsprite_idx
 
+    ldy #$00
 !:
     inc C64__COLOR_BORDER
 
-    ldy _rsprite_idx
-    lda _rsort_vsprite, y
-    sta _vsprite_id
-    jsr render_vsprite
+    // retrieve id of next vsprite to render
+    ldx _vsprites_ysort, y
+    stx _vsprite_id
 
-    inc _rsprite_idx
-    lda _rsprite_idx
-    cmp #NUM_SPRITES
-    bne !-
-
-    rts
-}
-
-render_vsprite:
-{
+    // prep psprite identifiers for quick access
     inc _psprite_id1
     lda _psprite_id1
     and #$07
@@ -155,6 +145,20 @@ render_vsprite:
     asl
     sta _psprite_id2
 
+    // render vsprite as psprite
+    jsr render_vsprite
+
+    // next sprite
+    iny
+    cpy #NUM_SPRITES
+    bne !-
+
+    rts
+}
+
+// x holds sprite id to render
+render_vsprite:
+{
     ldx _psprite_id1
     lda _psprites_done, x
 !:
@@ -200,99 +204,40 @@ no_upper:
     lda _vsprites_gfx, x
     ldx _psprite_id1
     sta C64__SPRITE_POINTERS, x
+
     rts
 }
 
 
 // ------------------------------------------------------------
 //
-// Now sort the msprites by y-coord, and compute the necessary
-// wait that should happen after rendering it for multiplexing
-// to work.
+// Sort all sprites using insert-sort algorithm according to
+// their y-coordinate.
 //
 // ------------------------------------------------------------
-.label RSORT_IDX = C64__ZEROP_BYTE
-rsort_sprites:
+ysort_vsprites:
 {
-    ldy #$00
-    sty RSORT_IDX
-sort_y:
-    // look for a sprite in the y-table
-    lda _ysort_vhead, y
-    cmp #$ff
-    beq next_y
-!:  
-    // found one, insert in rsort list
-    ldx RSORT_IDX
-    inc RSORT_IDX
-    sta _rsort_vsprite, x
-
-    // borrow acc to compute ywait
-    pha
-    tya
-    clc
-    adc #$15
-    sta _rsort_ywait, x
-    pla
-
-    // look for a next-sprite behind it
-    tax
-    lda _ysort_vnext, x
-    cmp #$ff
-    bne !- // found one, loop back
-
-next_y:
-    // no more sprites on this y, increment
+    ldy #$01 // outer counter 1..NUM_SPRITES
+outer:
+    ldx _vsprites_ysort, y
+    lda _vsprites_y, x
+    sty _ysort_outer_i // save outer counter
+    stx _ysort_outer_v // save outer vsprite id
+inner:
+    ldx _vsprites_ysort - 1, y 
+    cmp _vsprites_y, x
+    bcs insert
+    stx _vsprites_ysort, y
+    dey // y is insertion cursor
+    bne inner
+insert:
+    ldx _ysort_outer_v // pull outer vsprite id
+    stx _vsprites_ysort, y
+    ldy _ysort_outer_i // pull outer counter
     iny
-    beq !+
-    jmp sort_y
-!:
-    // all ys checked, return
-    rts
-}
+    cpy #NUM_SPRITES
+    bne outer
 
-
-// ------------------------------------------------------------
-//
-// Run through all virtual sprites in sequence and register 
-// them in the y-sort table. If multiple sprites appear on the
-// same y coordinate, use a linked-list to manage those.
-//
-// ------------------------------------------------------------
-ysort_sprites:
-{
-    lda #$00
-    sta _vsprite_id
-
-sort_loop:
-    ldx _vsprite_id
-    lda #$ff
-    sta _ysort_vnext, x
-
-    ldy _vsprites_y, x
-    lda _ysort_vhead, y // acc is cursor of linked-list
-    cmp #$ff
-    beq empty_row
-
-not_empty:
-    tax                 // transfer linked-list cursor from acc to x
-    lda _ysort_vnext, x // read from linked-list using x
-    cmp #$ff            // compare with no-sprite identifier
-    bne not_empty       // loop until we found the tail
-
-    lda _vsprite_id
-    sta _ysort_vnext, x
-    jmp continue
-
-empty_row:
-    txa
-    sta _ysort_vhead, y
-
-continue:
-    inc _vsprite_id
-    lda _vsprite_id
-    cmp #NUM_SPRITES
-    bne sort_loop
     rts
 }
 
@@ -301,22 +246,23 @@ continue:
 // Calculate sprite x and y positions.
 //
 // ------------------------------------------------------------
-.label PATH_IDX = C64__ZEROP_BYTE
-
 tick_vsprites:
 {
+//#define PAUSE
+#if PAUSE
+    jsr check_input
+#else  
+    inc _tick
+#endif 
+
     lda _tick
-    sta PATH_IDX
+    sta _path_idx
 
     ldx #$00
 !:
-    ldy _vsprites_y, x
-    lda #$ff
-    sta _ysort_vhead, y
-
-    lda PATH_IDX
+    lda _path_idx
     adc #$fc
-    sta PATH_IDX
+    sta _path_idx
     tay
 
     lda _path_xl, y
@@ -329,6 +275,24 @@ tick_vsprites:
     inx
     cpx #NUM_SPRITES
     bne !-
+    rts
+}
+
+check_input:
+{
+    lda #C64__JOY_LEFT
+    bit C64__JOY1
+    beq joy_left
+    lda #C64__JOY_RIGHT
+    bit C64__JOY1
+    beq joy_right
+    jmp !+
+joy_left:
+    dec _tick
+    jmp !+
+joy_right:
+    inc _tick
+!:
     rts
 }
 
