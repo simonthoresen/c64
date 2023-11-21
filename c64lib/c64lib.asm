@@ -204,6 +204,18 @@ no_carry:
 // Wait for the raster to hit the bottom border.
 //
 // ------------------------------------------------------------
+.macro wait_vtop() 
+{
+!:
+    lda C64__SCREEN_CTRL1
+    and #$80
+    cmp #$80
+    beq !-
+    lda #$00
+    cmp C64__RASTER_LINE
+    bne !-
+}
+
 .macro wait_vblank() {
 !:  // in case the raster is on our marker line, we wait for it increment
     lda C64__RASTER_LINE

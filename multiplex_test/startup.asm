@@ -9,7 +9,7 @@ BasicUpstart2(startup)
 .label DATA_BLOCK = ADR_DATA/64
 .const FONT = " abcdefghijklmnopqrstuvwxyz0123456789"
 .const TEXT = "012345678901234567890"
-.const NUM_SPRITES = $10
+.const NUM_SPRITES = $40
 
 
 // ------------------------------------------------------------
@@ -31,7 +31,7 @@ _vsprites_xl:
 _vsprites_xh:
     .fill NUM_SPRITES, $00
 _vsprites_y:
-    .fill NUM_SPRITES, $32 + i * $10
+    .fill NUM_SPRITES, min($32 + i * $10, $ff)
 _vsprites_gfx:
     .fill NUM_SPRITES, DATA_BLOCK + index_of(TEXT.charAt(mod(i, TEXT.size())), FONT)
 
@@ -53,29 +53,21 @@ startup:
 main:
     lda #$00
     sta C64__COLOR_BORDER
-!:
-    lda C64__SCREEN_CTRL1
-    and #$80
-    cmp #$80
-    beq !-
-    lda #$00
-    cmp C64__RASTER_LINE
-    bne !-
+    wait_vtop()
 
     lda #$00
     .for (var i = 0; i < 8; i++) {
         sta _psprites_yfree + i
     }
     sta _psprites_off
-    sta _cursor
     .for (var i = 0; i < NUM_SPRITES; i++) {
         inc C64__COLOR_BORDER
         ldx #i
         ldy #mod(i, 2)
         jsr render_vsprite
+        
     }
     jmp main
-
 
 .label _render_jtable_lo = C64__ZEROP_FREE + $00 // ..$08
 .label _render_jtable_hi = C64__ZEROP_FREE + $08 // ..$0f
@@ -128,7 +120,6 @@ render_vsprite7:
 // x as vsprite id, y is free
 .label _psprites_yfree = C64__ZEROP_LAST - $40 // last 64 bytes on zeropage
 .label _psprites_off = C64__ZEROP_FREE + $12
-.label _cursor = C64__ZEROP_FREE + $13
 
 .macro render_vsprite(psprite)
 {
@@ -139,9 +130,6 @@ render_vsprite7:
     rts
 !:
     lda _psprites_yfree + psprite
-    cmp #$ff
-    bne !+
-//    rts
 !:
     cmp C64__RASTER_LINE
     bcs !-
@@ -167,20 +155,6 @@ no_upper:
     sta C64__SPRITE_POS + psprite * 2 + 1
 
     // register boundary y
-#if DEBUG
-    pha
-    txa
-    pha
-    lda _vsprites_y, x
-    ldx _cursor
-    jsr print.byte
-    inc _cursor
-    inc _cursor
-    inc _cursor
-    pla
-    tax
-    pla
-#endif
     clc
     adc #$15
     cmp #$15
@@ -188,33 +162,8 @@ no_upper:
     lda #(1 << psprite)
     ora _psprites_off
     sta _psprites_off
-/*
-    txa
-    pha
-    lda _psprites_off
-    ldx #$10
-    jsr print.byte
-    pla
-    tax
-*/  
-//    lda #$ff
 !:
     sta _psprites_yfree + psprite
-#if DEBUG
-    pha
-    txa
-    pha
-    lda _psprites_yfree + psprite
-    ldx _cursor
-    jsr print.byte
-    inc _cursor
-    inc _cursor
-    inc _cursor
-    inc _cursor
-    pla
-    tax
-    pla
-#endif
 
     // store gfx pointer
     lda _vsprites_gfx, x
