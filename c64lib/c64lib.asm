@@ -207,13 +207,13 @@ no_carry:
 .macro wait_vtop() 
 {
 !:
+    lda #$00
+    cmp C64__RASTER_LINE
+    bne !-
     lda C64__SCREEN_CTRL1
     and #$80
     cmp #$80
     beq !-
-    lda #$00
-    cmp C64__RASTER_LINE
-    bne !-
 }
 
 .macro wait_vblank() {

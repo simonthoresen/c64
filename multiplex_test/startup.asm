@@ -8,7 +8,7 @@ BasicUpstart2(startup)
 .label ADR_DATA = $2000
 .label DATA_BLOCK = ADR_DATA/64
 .const FONT = " abcdefghijklmnopqrstuvwxyz0123456789"
-.const TEXT = "012345678901234567890"
+.const TEXT = "0123456789"
 .const NUM_SPRITES = $40
 
 
@@ -60,13 +60,21 @@ main:
         sta _psprites_yfree + i
     }
     sta _psprites_off
-    .for (var i = 0; i < NUM_SPRITES; i++) {
-        inc C64__COLOR_BORDER
-        ldx #i
-        ldy #mod(i, 2)
-        jsr render_vsprite
-        
-    }
+    ldx #$00 // psprite
+!:
+    inc C64__COLOR_BORDER
+    lda _psprites_off
+    cmp #$ff // all 8 psprites off
+    beq !+
+
+    txa 
+    and #$07 // mod 8
+    tay // vsprite
+    jsr render_vsprite
+    inx 
+    cpx #NUM_SPRITES
+    bne !-
+!:
     jmp main
 
 .label _render_jtable_lo = C64__ZEROP_FREE + $00 // ..$08

@@ -12,17 +12,16 @@ startup:
 
 main:
     lda C64__SCREEN_CTRL1
-    lsr
-    lsr
-    lsr
-    lsr
-    lsr
-    lsr
-    lsr
-    clc
-    adc #$01
+    and #$80
+    cmp #$80
+    beq !+
+    lda #$02
+    jmp !++
+!:
+    lda #$04
+!:
     sta C64__COLOR_BORDER
-    inc C64__SCREEN_DATA
+    //inc C64__SCREEN_DATA
     jmp main
 
 my_irq0:
@@ -37,6 +36,6 @@ my_irq1:
     enter_irq()
     lda #$01
     sta _raster_upper
-    setup_irq($0001, my_irq0)
+    setup_irq($0000, my_irq0)
     leave_irq()
     rti
