@@ -114,9 +114,9 @@ main:
 // that it can be reused.
 //
 // ------------------------------------------------------------
-.label _vsprite_id  = C64__ZEROP_WORD1_LO
-.label _psprite_id1 = C64__ZEROP_WORD2_LO
-.label _psprite_id2 = C64__ZEROP_WORD2_HI
+.label _vsprite_id  = C64__ZEROP_FREE + $00
+.label _psprite_id1 = C64__ZEROP_FREE + $01
+.label _psprite_id2 = C64__ZEROP_FREE + $02
 
 _psprites_done:
     .fill 8, $00
@@ -210,7 +210,7 @@ no_upper:
 // to work.
 //
 // ------------------------------------------------------------
-.label RSORT_IDX = C64__ZEROP_BYTE
+.label RSORT_IDX = C64__ZEROP_FREE + $03
 rsort_sprites:
 {
     ldy #$00
@@ -319,7 +319,7 @@ clear_ysort_table:
 // Calculate sprite x and y positions.
 //
 // ------------------------------------------------------------
-.label PATH_IDX = C64__ZEROP_BYTE
+.label PATH_IDX = C64__ZEROP_FREE + $04
 
 tick_vsprites:
 {
