@@ -9,7 +9,7 @@ BasicUpstart2(startup)
 .label DATA_BLOCK = ADR_DATA/64
 .const FONT = " abcdefghijklmnopqrstuvwxyz0123456789"
 .const TEXT = "012345678901234567890"
-.const NUM_SPRITES = $20
+.const NUM_SPRITES = $10
 
 
 // ------------------------------------------------------------
@@ -31,7 +31,7 @@ _vsprites_xl:
 _vsprites_xh:
     .fill NUM_SPRITES, $00
 _vsprites_y:
-    .fill NUM_SPRITES, $32 + i * $20
+    .fill NUM_SPRITES, $32 + i * $10
 _vsprites_gfx:
     .fill NUM_SPRITES, DATA_BLOCK + index_of(TEXT.charAt(mod(i, TEXT.size())), FONT)
 
@@ -44,10 +44,6 @@ _vsprites_gfx:
 *=$4000 "Main Program"
 #import "../c64lib/c64lib.asm"
 
-//.label _raster_upper = C64__ZEROP_FREE + $14
-_raster_upper: 
-    .byte $00
-
 startup:
     do_startup()
     clear_screen($20)
@@ -57,16 +53,15 @@ startup:
 main:
     lda #$00
     sta C64__COLOR_BORDER
-    wait_vtop()
-/*
-    lda $00
 !:
-    cmp _raster_upper
-    beq !- // wait for us to be in upper
-!:
-    cmp _raster_upper
-    bne !- // wait for us to hit lower
-*/
+    lda C64__SCREEN_CTRL1
+    and #$80
+    cmp #$80
+    beq !-
+    lda #$00
+    cmp C64__RASTER_LINE
+    bne !-
+
     lda #$00
     .for (var i = 0; i < 8; i++) {
         sta _psprites_yfree + i
@@ -76,23 +71,10 @@ main:
     .for (var i = 0; i < NUM_SPRITES; i++) {
         inc C64__COLOR_BORDER
         ldx #i
-        ldy #mod(i, 1)
+        ldy #mod(i, 2)
         jsr render_vsprite
     }
     jmp main
-
-.macro wait_vtop() 
-{    
-    lda #$ff // can only happen on upper half
-!:  cmp C64__RASTER_LINE
-    bne !-
-    lda #$01 // wait for first wrap
-!:  cmp C64__RASTER_LINE
-    bne !-
-    lda #$00 // wait for top of screen
-!:  cmp C64__RASTER_LINE
-    bne !-
-}
 
 
 .label _render_jtable_lo = C64__ZEROP_FREE + $00 // ..$08
@@ -159,7 +141,7 @@ render_vsprite7:
     lda _psprites_yfree + psprite
     cmp #$ff
     bne !+
-    rts
+//    rts
 !:
     cmp C64__RASTER_LINE
     bcs !-
@@ -215,7 +197,7 @@ no_upper:
     pla
     tax
 */  
-    lda #$ff
+//    lda #$ff
 !:
     sta _psprites_yfree + psprite
 #if DEBUG
