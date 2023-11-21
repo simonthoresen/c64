@@ -343,7 +343,7 @@ no_carry:
     // the 9th bit for the rasterline we want our irq to be triggered.
     lda C64__SCREEN_CTRL1
     .if (i16_line > $ff) {
-        and #$80 // set the msb
+        ora #$80 // set the msb
     } else {
         and #$7f // clear the msb
     }
