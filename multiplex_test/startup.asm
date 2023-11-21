@@ -48,38 +48,11 @@ _vsprites_gfx:
 _raster_upper: 
     .byte $00
 
-irq1:
-    enter_irq()
-    inc C64__COLOR_BORDER
-/*    lda #$00
-    sta _raster_upper
-    setup_irq($00, irq_at0)*/
-    leave_irq()
-    rti
-
-irq_at0:
-    enter_irq()
-    inc C64__COLOR_BORDER
-/*    lda _raster_upper
-    eor #$01
-    sta C64__COLOR_BORDER
-    sta _raster_upper
- */   leave_irq()
-    rti
-
 startup:
-	enter_startup()
-	setup_irq($00, irq1)
-	leave_startup()
-    jmp *
-
-    enter_startup()
-    setup_irq($fa, irq1)
-    leave_startup()
+    do_startup()
     clear_screen($20)
     enable_psprites()
     fill_jtable()
-    jmp *
 
 main:
     lda #$00
