@@ -42,6 +42,7 @@
 .label C64__SPRITE_POS_UPPER    = $d010
 .label C64__ZEROP_INTERNAL      = $02
 .label C64__ZEROP_FREE          = $10
+.label C64__ZEROP_LAST          = $fe
 
 .label C64__BLACK               = $00
 .label C64__WHITE               = $01
