@@ -2,6 +2,11 @@ BasicUpstart2(startup)
 #import "../c64lib/c64lib.asm"
 #import "data.asm"
 
+.label C64__ZEROP_WORD_LO = C64__ZEROP_FREE + $00
+.label C64__ZEROP_WORD_HI = C64__ZEROP_FREE + $01
+.label C64__ZEROP_WORD = C64__ZEROP_WORD_LO
+.label C64__ZEROP_BYTE = C64__ZEROP_FREE + $02
+
 _seed: 
     alloc_seed()
 _world_x:
