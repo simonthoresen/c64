@@ -15,8 +15,8 @@ BasicUpstart2(startup)
 .label ADR_DATA = $2000
 .label DATA_BLOCK = ADR_DATA/64
 .const FONT = " abcdefghijklmnopqrstuvwxyz0123456789"
-.const TEXT = "012345678901234567890123456789012"
-.const NUM_SPRITES = $18
+.const TEXT = "0123456789"
+.const NUM_SPRITES = $20
 
 
 // ------------------------------------------------------------
@@ -42,7 +42,7 @@ BIT_MASK_INV:
     .return $18 + $94 + $94 * cos(toRadians((i * 1 * 360) / 256))
 }
 .function path_y(i) {
-    .return $32 + $5a + $5a * sin(toRadians((i * 3 * 360) / 256))
+    .return $32 + $5a + $5a * sin(toRadians((i * 4 * 360) / 256))
 }
 _path_xl:
     .fill 256, path_x(i) & $ff
@@ -50,9 +50,6 @@ _path_xh:
     .fill 256, path_x(i) >> 8
 _path_y:
     .fill 256, path_y(i)
-_text:
-    .fill TEXT.size(), index_of(TEXT.charAt(i), FONT)
-    .byte $ff
 _frame:
     .byte $00
 _tick:
@@ -66,14 +63,13 @@ _vsprites_y:
 _vsprites_gfx:
     .fill NUM_SPRITES, DATA_BLOCK + index_of(TEXT.charAt(mod(i, TEXT.size())), FONT)
 
-.label _vsprite_id  = $02
-.label _psprite_id1 = $03
-.label _psprite_id2 = $04
-.label _ysort_outer_i = $05
-.label _ysort_outer_v = $06
-.label _path_idx = $07
-.label _vsprites_ysort = $10 // ..NUM_SPRITES
-
+.label _path_idx = C64__ZEROP_FREE + $01
+.label _vsprite_id  = C64__ZEROP_FREE + $02
+.label _psprite_id1 = C64__ZEROP_FREE + $03
+.label _psprite_id2 = C64__ZEROP_FREE + $04
+.label _ysort_outer_i = C64__ZEROP_FREE + $05
+.label _ysort_outer_v = C64__ZEROP_FREE + $06
+.label _vsprites_ysort = $20 // ..NUM_SPRITES
 
 // ------------------------------------------------------------
 //
@@ -93,15 +89,26 @@ startup:
         sta _vsprites_ysort + i
     }
 main:
-    lda #$00
-    sta C64__COLOR_BORDER
-    wait_vblank()
-    inc _frame
-
     inc C64__COLOR_BORDER    
     jsr tick_vsprites // white
     inc C64__COLOR_BORDER
     jsr ysort_vsprites // red
+
+    lda #$00
+    sta C64__COLOR_BORDER
+/*
+    lda C64__SCREEN_CTRL1
+    and #$80
+    cmp #$80
+    bne !+
+    lda #$32
+    cmp C64__RASTER_LINE
+    bcc !+
+*/
+    wait_vtop()
+!:
+    inc _frame
+
     inc C64__COLOR_BORDER
     jsr render_vsprites // cyan
 
@@ -161,9 +168,12 @@ render_vsprite:
 {
     ldx _psprite_id1
     lda _psprites_done, x
+    cmp #$ff
+    bne !+
+    rts
 !:
     cmp C64__RASTER_LINE
-    bpl !-
+    bcs !-
 
     // store x coord
     ldx _vsprite_id
@@ -196,6 +206,10 @@ no_upper:
     // register boundary y
     clc
     adc #$15
+    cmp #$15
+    bcs !+
+    lda #$ff
+!:
     ldx _psprite_id1
     sta _psprites_done, x
 
@@ -261,7 +275,8 @@ tick_vsprites:
     ldx #$00
 !:
     lda _path_idx
-    adc #$fc
+    clc
+    adc #$fd
     sta _path_idx
     tay
 
