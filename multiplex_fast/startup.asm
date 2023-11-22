@@ -96,22 +96,12 @@ main:
 
     lda #$00
     sta C64__COLOR_BORDER
-/*
-    lda C64__SCREEN_CTRL1
-    and #$80
-    cmp #$80
-    bne !+
-    lda #$32
-    cmp C64__RASTER_LINE
-    bcc !+
-*/
-    wait_vtop()
-!:
-    inc _frame
+    wait_vline($0020)
 
     inc C64__COLOR_BORDER
     jsr render_vsprites // cyan
 
+    inc _frame
     jmp main
 
 
