@@ -39,16 +39,22 @@ BIT_MASK_INV:
 //
 // ------------------------------------------------------------
 .function path_x(i) {
-    .return $18 + $94 + $94 * cos(toRadians((i * 1 * 360) / 256))
+    .return $18 + $94 + $94 * cos(toRadians((i * 360) / 256))
 }
 .function path_y(i) {
-    .return $32 + $5a + $5a * sin(toRadians((i * 4 * 360) / 256))
+    .return $32 + $5a + $5a * sin(toRadians((i * 360) / 256))
 }
 _path_xl:
-    .fill 256, path_x(i) & $ff
+    .fill 256, path_x(i * 1) & $ff
 _path_xh:
-    .fill 256, path_x(i) >> 8
+    .fill 256, path_x(i * 1) >> 8
 _path_y:
+    .fill 256, path_y(i * 4)
+_sin_xl:
+    .fill 256, path_x(i) & $ff
+_sin_xh:
+    .fill 256, path_x(i) >> 8
+_sin_y:
     .fill 256, path_y(i)
 _frame:
     .byte $00
@@ -96,7 +102,7 @@ main:
 
     lda #$00
     sta C64__COLOR_BORDER
-    wait_vline($0020)
+    wait_vline($0018)
 
     inc C64__COLOR_BORDER
     jsr render_vsprites // cyan
@@ -259,22 +265,32 @@ tick_vsprites:
     inc _tick
 #endif 
 
-    lda _tick
-    sta _path_idx
-
     ldx #$00
 !:
-    lda _path_idx
+    txa
+    asl
+    asl
+    eor #$ff
     clc
-    adc #$fd
-    sta _path_idx
+    adc _tick
     tay
 
-    lda _path_xl, y
+    lda _sin_xl, y
     sta _vsprites_xl, x
-    lda _path_xh, y
+    lda _sin_xh, y
     sta _vsprites_xh, x
-    lda _path_y, y
+
+
+    txa
+    asl
+    asl
+    asl
+    eor #$ff
+    clc
+    adc _tick
+    tay
+
+    lda _sin_y, y
     sta _vsprites_y, x
  
     inx
