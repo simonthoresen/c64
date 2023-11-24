@@ -87,6 +87,9 @@ _color:
         }
     }
 
+.const C64__ZEROP_BYTE = $10
+
+
 startup:
     lda #$00
     sta C64__COLOR_BORDER
@@ -96,11 +99,7 @@ startup:
     jsr render_world
 
 main:
-    lda #$00
-    sta C64__COLOR_BORDER
-    wait_vblank()
-    lda #$02
-    inc C64__COLOR_BORDER
+    wait_vline($00fa)
 
     lda _world_x
     and #$01
