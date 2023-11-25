@@ -322,11 +322,7 @@ no_carry:
 
     // The method shown here to store the registers is the most orthodox and most failsafe.
 
-    pha                 // store register A in stack
-    txa
-    pha                 // store register X in stack
-    tya
-    pha                 // store register Y in stack
+    push_state()
 
     lda #$ff            // this is the orthodox and safe way of clearing the interrupt condition of the VICII.
     sta C64__IRQ_STATUS // if you don't do this the interrupt condition will be present all the time and you end
@@ -336,9 +332,6 @@ no_carry:
 
                         // it's pretty safe to use inc $d019 (or any other rmw instruction) for brevity, they
                         // will only fail on hardware like c65 or supercpu. c64dtv is ok with this though.
-
-	lda #$02
-	sta C64__COLOR_BORDER
 }
 
 .macro setup_irq(i16_line, i16_irq)
@@ -367,14 +360,7 @@ no_carry:
 
 .macro leave_irq()
 {
-	lda #$00
-	sta C64__COLOR_BORDER
-
-    pla
-    tay                 // restore register Y from stack (remember stack is FIFO: First In First Out)
-    pla
-    tax                 // restore register X from stack
-    pla                 // restore register A from stack
+    pop_state()
 }
 
 
