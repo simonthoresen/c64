@@ -32,7 +32,7 @@ main:
     wait_vblank()
     inc C64__SPRITE_POINTERS
     inx
-    cpx #72
+    cpx #30
     bne !-     
     jmp main
 
@@ -64,7 +64,7 @@ main:
     .var cx = 11
     .var cy = 10
 
-    .for (var ra = 0; ra < 360; ra = ra + 5) {
+    .for (var ra = 0; ra < 90; ra = ra + 3) {
         .var rm = RotationMatrix(0, 0, toRadians(-ra))
         .for (var dy = 0; dy < C64__SPRITE_H; dy++) {
             .var str = ".byte %"
