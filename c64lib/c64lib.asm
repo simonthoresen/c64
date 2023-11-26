@@ -119,6 +119,7 @@ no_carry:
     sta a16_var
     lda #$00
     adc a16_var + 1
+    sta a16_var + 1
 }
 
 .macro add__a16_i8s(a16_var, i8s_val)
