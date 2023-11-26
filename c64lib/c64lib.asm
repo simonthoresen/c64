@@ -5,6 +5,7 @@
 // C64 constants
 //
 // ------------------------------------------------------------
+.const C64__CHARSET             = @"@abcdefghijklmnopqrstuvwxyz[£]↑← !\"#$%&'()*+,-./0123456789:;<=>?"
 .label C64__COLOR               = $0286
 .const C64__COLOR_BORDER        = $d020
 .const C64__COLOR_BG0           = $d021
