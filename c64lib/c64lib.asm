@@ -1,3 +1,5 @@
+#importonce
+
 // ------------------------------------------------------------
 //
 // C64 constants
@@ -41,7 +43,11 @@
 .label C64__SPRITE_POS          = $d000
 .label C64__SPRITE_POS_UPPER    = $d010
 .label C64__ZEROP_INTERNAL      = $02
-.label C64__ZEROP_FREE          = $10
+.label C64__ZEROP_BYTE0         = C64__ZEROP_INTERNAL + 0
+.label C64__ZEROP_BYTE1         = C64__ZEROP_INTERNAL + 1
+.label C64__ZEROP_WORD0         = C64__ZEROP_INTERNAL + 2
+.label C64__ZEROP_WORD1         = C64__ZEROP_INTERNAL + 4 
+.label C64__ZEROP_FREE          = C64__ZEROP_INTERNAL + 6
 .label C64__ZEROP_LAST          = $fe
 
 .label C64__BLACK               = $00
@@ -68,6 +74,7 @@
 //
 // ------------------------------------------------------------
 #import "c64sprite.asm"
+#import "c64print.asm"
 
 
 // ------------------------------------------------------------
@@ -372,12 +379,21 @@ no_carry:
 // ------------------------------------------------------------
 .function index_of(look_for, look_in) 
 {
+    .var ret = index_of(look_for, look_in, $0100)
+    .if (ret == $0100) {
+    	.error("char '" + look_for + "' not found")
+    }
+    .return ret
+}
+
+.function index_of(look_for, look_in, default_val) 
+{
 	.for (var i = 0; i < look_in.size(); i++) {
 		.if (look_for == look_in.charAt(i)) {
 			.return i
 		}
 	}
-	.error("char '" + look_for + "' not found")
+    .return default_val
 }
 
 
