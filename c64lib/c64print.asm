@@ -31,68 +31,97 @@ _char_map:
 // Methods
 //
 // ------------------------------------------------------------
-.macro print__i8_(i8) {
-#if ENABLE_PRINT
-
-    lda #i8
-    ldx print._cursor_x
-    ldy print._cursor_y
-    jsr print.print_char_xya
-
-    iny
-    cpy #$28
-    bne store_x
-    ldy #$00
-    ldx print._cursor_y
-    inx
-    cpx #$19
-    bne store_y
-    ldx #$00
-store_y:
-    stx print._cursor_y
-store_x:
-    sty print._cursor_x
-
-#endif
-}
-
 #if ENABLE_PRINT
 .namespace print {
 
-print_char_xya:
+print_zpb0:
+    // save state
+    pha 
+    txa
     pha
+
+    // compute address of cursor
     set__i16(C64__ZEROP_WORD0, C64__SCREEN_DATA)
+    ldx _cursor_y
     cpx #$00
     beq !++
 !:  add__a16_i8(C64__ZEROP_WORD0, $28)
     dex
     bne !-
-!:  
+
+    // write char to screen
+!:  ldx C64__ZEROP_BYTE0
+    lda print._char_map, x
+    ldx _cursor_x
+    sta (C64__ZEROP_WORD0), x
+
+    // move the cursor ahead
+    inc _cursor_x
+    lda _cursor_x
+    cmp #$28
+    bne !+
+
+    lda #$00
+    sta _cursor_x
+
+    inc _cursor_y
+    lda _cursor_y
+    cmp #$19
+    bne !+
+
+    lda #$00
+    sta _cursor_y
+
+    // restore state
+!:  pla
+    tax
     pla
-    jsr map_char
-    sta (C64__ZEROP_WORD0), y
     rts
 
-map_char:
-    stx C64__ZEROP_BYTE0
-    tax
-    lda print._char_map, x
-    ldx C64__ZEROP_BYTE0
+
+print_hex:
+    pha
+    lsr
+    lsr
+    lsr
+    lsr
+    jsr print_nibble
+    
+    pla
+    and #$0f
+    inx
+    jsr print_nibble
+    rts
+
+print_nibble:
+    cmp #$0a
+    bcs print_letter
+
+print_digit:
+    ora #$30
+    jmp !+
+
+print_letter:
+    clc
+    sbc #$08
+
+!:
+    sta C64__SCREEN_DATA, x
     rts
 
 }
 #endif
-
 
 .macro print_a() {
 #if ENABLE_PRINT
 
-    .error("not implemented")
+    sta C64__ZEROP_BYTE0
+    jsr print.print_zpb0
 
 #endif
 }
 
-.macro print_byte__a8(a8_val) {
+.macro print_hex__a8(a8_val) {
 #if ENABLE_PRINT
 
     .error("not implemented yet")
@@ -100,7 +129,7 @@ map_char:
 #endif
 }
 
-.macro print_byte__i8(i8_val) {
+.macro print_hex__i8(i8_val) {
 #if ENABLE_PRINT
 
     .error("not implemented yet")
@@ -108,7 +137,7 @@ map_char:
 #endif
 }
 
-.macro print_word__a16(a16_val) {
+.macro print_hex__a16(a16_val) {
 #if ENABLE_PRINT
 
     .error("not implemented yet")
@@ -116,7 +145,7 @@ map_char:
 #endif
 }
 
-.macro print_word__i16(i16_val) {
+.macro print_hex__i16(i16_val) {
 #if ENABLE_PRINT
 
     .error("not implemented yet")
@@ -295,74 +324,74 @@ map_char:
 #endif
 }
 
-.macro print_byte__a8_a8(a8_val, a8_x, a8_y) {
+.macro print_hex__a8_a8(a8_val, a8_x, a8_y) {
 #if ENABLE_PRINT
 
     set_cursor__a8(a8_x, a8_y)
-    print_byte__a8(a8_val)
+    print_hex__a8(a8_val)
 
 #endif
 }
 
-.macro print_byte__a8_i8(a8_val, i8_x, i8_y) {
+.macro print_hex__a8_i8(a8_val, i8_x, i8_y) {
 #if ENABLE_PRINT
 
     set_cursor__i8(i8_x, i8_y)
-    print_byte__a8(a8_val)
+    print_hex__a8(a8_val)
 
 #endif
 }
 
-.macro print_byte__i8_a8(i8_val, a8_x, a8_y) {
+.macro print_hex__i8_a8(i8_val, a8_x, a8_y) {
 #if ENABLE_PRINT
 
     set_cursor__a8(a8_x, a8_y)
-    print_byte__i8(i8_val)
+    print_hex__i8(i8_val)
 
 #endif
 }
 
-.macro print_byte__i8_i8(i8_val, i8_x, i8_y) {
+.macro print_hex__i8_i8(i8_val, i8_x, i8_y) {
 #if ENABLE_PRINT
 
     set_cursor__i8(i8_x, i8_y)
-    print_byte__i8(i8_val)
+    print_hex__i8(i8_val)
 
 #endif
 }
 
-.macro print_word__a16_a8(a16_val, a8_x, a8_y) {
+.macro print_hex__a16_a8(a16_val, a8_x, a8_y) {
 #if ENABLE_PRINT
 
     set_cursor__a8(a8_x, a8_y)
-    print_word__a16(a16_val)
+    print_hex__a16(a16_val)
 
 #endif
 }
 
-.macro print_word__a16_i8(a16_val, i8_x, i8_y) {
+.macro print_hex__a16_i8(a16_val, i8_x, i8_y) {
 #if ENABLE_PRINT
 
     set_cursor__i8(i8_x, i8_y)
-    print_word__a16(a16_val)
+    print_hex__a16(a16_val)
 
 #endif
 }
 
-.macro print_word__i16_a8(i16_val, a8_x, a8_y) {
+.macro print_hex__i16_a8(i16_val, a8_x, a8_y) {
 #if ENABLE_PRINT
 
     set_cursor__a8(a8_x, a8_y)
-    print_word__i16(i16_val)
+    print_hex__i16(i16_val)
 
 #endif
 }
 
-.macro print_word__i16_i8(i16_val, i8_x, i8_y) {
+.macro print_hex__i16_i8(i16_val, i8_x, i8_y) {
 #if ENABLE_PRINT
 
     set_cursor__i8(i8_x, i8_y)
-    print_word__i16(i16_val)
+    print_hex__i16(i16_val)
 
 #endif
 }
