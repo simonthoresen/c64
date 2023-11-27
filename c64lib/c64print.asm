@@ -35,12 +35,12 @@ _char_map:
 .namespace print {
 
 print_acc:
-    // save state
+    // backup value of y-reg because we need the register
     sta C64__ZEROP_BYTE0
     tya
     pha
 
-    // compute address of cursor
+    // compute screen-address of cursor
     set__i16(C64__ZEROP_WORD0, C64__SCREEN_DATA)
     ldy _cursor_y
     cpy #$00
@@ -50,7 +50,7 @@ print_acc:
     bne !-
 !:
 
-    // write char to screen
+    // write value in acc to screen
 #if ENABLE_PRINT_FONT
     ldy C64__ZEROP_BYTE0
     lda print._char_map, y
@@ -60,7 +60,6 @@ print_acc:
     ldy _cursor_x
     sta (C64__ZEROP_WORD0), y
 
-inc_cursor:
     // move the cursor ahead
     inc _cursor_x
     lda _cursor_x
@@ -78,8 +77,8 @@ inc_cursor:
     lda #$00
     sta _cursor_y
 
-    // restore state
 !:  
+    // restore y-register 
     pla
     tay
     rts
@@ -118,6 +117,12 @@ print_letter:
 }
 #endif
 
+
+// ------------------------------------------------------------
+//
+// Helpers
+//
+// ------------------------------------------------------------
 .macro print_acc() {
 #if ENABLE_PRINT
 
@@ -126,20 +131,6 @@ print_letter:
 #endif
 }
 
-.macro print_hex() {
-#if ENABLE_PRINT
-
-    jsr print.print_hex
-
-#endif
-}
-
-
-// ------------------------------------------------------------
-//
-// Helpers
-//
-// ------------------------------------------------------------
 .macro print_acc__a8(a8_x, a8_y) {
 #if ENABLE_PRINT
 
@@ -301,6 +292,14 @@ print_letter:
 
     set_cursor__i8(i8_x, i8_y)
     print_string(str)
+
+#endif
+}
+
+.macro print_hex() {
+#if ENABLE_PRINT
+
+    jsr print.print_hex
 
 #endif
 }
