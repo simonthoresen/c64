@@ -1,8 +1,8 @@
 #importonce
 #import "c64lib.asm"
-#define ENABLE_PRINT
-#define ENABLE_PRINT_FONT
-.const PRINT_FONT = @" abcdefghijklmnopqrstuvwxyz"
+//#define ENABLE_PRINT
+//#define ENABLE_PRINT_FONT
+//.const PRINT_FONT = @" abcdefghijklmnopqrstuvwxyz"
 
 // ------------------------------------------------------------
 //
@@ -19,9 +19,10 @@ _cursor_y:
     .byte $00
 _char_map:
     #if ENABLE_PRINT_FONT
-        .fill 64, index_of(C64__CHARSET.charAt(i), PRINT_FONT, $ff)
+        .fill  64, index_of(C64__CHARSET.charAt(i), PRINT_FONT, $ff)
+        .fill 192, $ff
     #else
-        .fill 64, C64__CHARSET.charAt(i)
+        .fill 256, i
     #endif
 }
 #endif
@@ -34,27 +35,29 @@ _char_map:
 #if ENABLE_PRINT
 .namespace print {
 
-print_zpb0:
+print_acc:
     // save state
-    pha 
-    txa
+    sta C64__ZEROP_BYTE0
+    tya
     pha
 
     // compute address of cursor
     set__i16(C64__ZEROP_WORD0, C64__SCREEN_DATA)
-    ldx _cursor_y
-    cpx #$00
+    ldy _cursor_y
+    cpy #$00
     beq !++
 !:  add__a16_i8(C64__ZEROP_WORD0, $28)
-    dex
+    dey
     bne !-
+!:
 
     // write char to screen
-!:  ldx C64__ZEROP_BYTE0
-    lda print._char_map, x
-    ldx _cursor_x
-    sta (C64__ZEROP_WORD0), x
+    ldy C64__ZEROP_BYTE0
+    lda print._char_map, y
+    ldy _cursor_x
+    sta (C64__ZEROP_WORD0), y
 
+inc_cursor:
     // move the cursor ahead
     inc _cursor_x
     lda _cursor_x
@@ -73,9 +76,9 @@ print_zpb0:
     sta _cursor_y
 
     // restore state
-!:  pla
-    tax
+!:  
     pla
+    tay
     rts
 
 
@@ -112,43 +115,18 @@ print_letter:
 }
 #endif
 
-.macro print_a() {
+.macro print_acc() {
 #if ENABLE_PRINT
 
-    sta C64__ZEROP_BYTE0
-    jsr print.print_zpb0
+    jsr print.print_acc
 
 #endif
 }
 
-.macro print_hex__a8(a8_val) {
+.macro print_hex() {
 #if ENABLE_PRINT
 
-    .error("not implemented yet")
-
-#endif
-}
-
-.macro print_hex__i8(i8_val) {
-#if ENABLE_PRINT
-
-    .error("not implemented yet")
-
-#endif
-}
-
-.macro print_hex__a16(a16_val) {
-#if ENABLE_PRINT
-
-    .error("not implemented yet")
-
-#endif
-}
-
-.macro print_hex__i16(i16_val) {
-#if ENABLE_PRINT
-
-    .error("not implemented yet")
+    jsr print.print_hex
 
 #endif
 }
@@ -159,20 +137,20 @@ print_letter:
 // Helpers
 //
 // ------------------------------------------------------------
-.macro print_a__a8(a8_x, a8_y) {
+.macro print_acc__a8(a8_x, a8_y) {
 #if ENABLE_PRINT
 
     set_cursor__a8(a8_x, a8_y)
-    print_a()
+    print_acc()
 
 #endif
 }
 
-.macro print_a__i8(i8_x, i8_y) {
+.macro print_acc__i8(i8_x, i8_y) {
 #if ENABLE_PRINT
 
     set_cursor__i8(i8_x, i8_y)
-    print_a()
+    print_acc()
 
 #endif
 }
@@ -182,7 +160,7 @@ print_letter:
 
     pha
     txa
-    print_a()
+    print_acc()
     pla
 
 #endif
@@ -211,7 +189,7 @@ print_letter:
 
     pha
     tya
-    print_a()
+    print_acc()
     pla
 
 #endif
@@ -240,7 +218,7 @@ print_letter:
 
     pha
     lda #i8_val
-    print_a() 
+    print_acc() 
     pla
 
 #endif
@@ -269,7 +247,7 @@ print_letter:
 
     pha
     lda a8_val
-    print_a()
+    print_acc()
     pla
 
 #endif
@@ -299,7 +277,7 @@ print_letter:
     pha 
     .for (var i = 0; i < str.size(); i++) {
         lda #str.charAt(i)
-        print_a()
+        print_acc()
     }
     pla
 
@@ -324,6 +302,17 @@ print_letter:
 #endif
 }
 
+.macro print_hex__a8(a8_val) {
+#if ENABLE_PRINT
+
+    pha
+    lda a8_val
+    print_hex()
+    pla
+
+#endif
+}
+
 .macro print_hex__a8_a8(a8_val, a8_x, a8_y) {
 #if ENABLE_PRINT
 
@@ -338,6 +327,17 @@ print_letter:
 
     set_cursor__i8(i8_x, i8_y)
     print_hex__a8(a8_val)
+
+#endif
+}
+
+.macro print_hex__i8(i8_val) {
+#if ENABLE_PRINT
+
+    pha
+    lda #i8_val
+    print_hex()
+    pla
 
 #endif
 }
@@ -360,6 +360,15 @@ print_letter:
 #endif
 }
 
+.macro print_hex__a16(a16_val) {
+#if ENABLE_PRINT
+
+    print_hex__a8(a16_val + 1)
+    print_hex__a8(a16_val)
+
+#endif
+}
+
 .macro print_hex__a16_a8(a16_val, a8_x, a8_y) {
 #if ENABLE_PRINT
 
@@ -374,6 +383,15 @@ print_letter:
 
     set_cursor__i8(i8_x, i8_y)
     print_hex__a16(a16_val)
+
+#endif
+}
+
+.macro print_hex__i16(i16_val) {
+#if ENABLE_PRINT
+
+    print_hex__i8(i16_val >> 8)
+    print_hex__i8(i16_val & $08)
 
 #endif
 }
@@ -402,19 +420,6 @@ print_letter:
 // Accessors
 //
 // ------------------------------------------------------------
-.macro set_cursor__i8(i8_x, i8_y) { 
-#if ENABLE_PRINT
-
-    pha
-    lda #i8_x
-    sta_cursor_x()
-    lda #i8_y
-    sta_cursor_y()
-    pla
-
-#endif
-}
-
 .macro set_cursor__a8(a8_x, a8_y) { 
 #if ENABLE_PRINT
 
@@ -422,6 +427,19 @@ print_letter:
     lda a8_x
     sta_cursor_x()
     lda a8_y
+    sta_cursor_y()
+    pla
+
+#endif
+}
+
+.macro set_cursor__i8(i8_x, i8_y) { 
+#if ENABLE_PRINT
+
+    pha
+    lda #i8_x
+    sta_cursor_x()
+    lda #i8_y
     sta_cursor_y()
     pla
 
