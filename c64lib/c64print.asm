@@ -1,8 +1,12 @@
+// Declare the following #defines before importing this file to 
+// enable printing and custom fonts:
+//
+// #define ENABLE_PRINT
+// #define ENABLE_PRINT_FONT
+// .const PRINT_FONT = @" abcdefghijklmnopqrstuvwxyz"
+// 
 #importonce
 #import "c64lib.asm"
-//#define ENABLE_PRINT
-//#define ENABLE_PRINT_FONT
-//.const PRINT_FONT = @" abcdefghijklmnopqrstuvwxyz"
 
 // ------------------------------------------------------------
 //
@@ -26,9 +30,10 @@ _char_map:
 }
 #endif
 
+
 // ------------------------------------------------------------
 //
-// Methods
+// Print a single character from the accumulator.
 //
 // ------------------------------------------------------------
 #if ENABLE_PRINT
@@ -75,14 +80,25 @@ print_acc:
     bne !+
 
     lda #$00
-    sta _cursor_y
+    sta _cursor_y  
+!:
 
-!:  
     // restore y-register 
     pla
     tay
     rts
 
+}
+#endif
+
+
+// ------------------------------------------------------------
+//
+// Print the value in the accumulator as a hexadecimal string.
+//
+// ------------------------------------------------------------
+#if ENABLE_PRINT
+.namespace print {
 
 print_hex:
     pha
@@ -94,9 +110,6 @@ print_hex:
     
     pla
     and #$0f
-    inx
-    jsr print_nibble
-    rts
 
 print_nibble:
     cmp #$0a
@@ -111,7 +124,7 @@ print_letter:
     sbc #$08
 
 !:
-    sta C64__SCREEN_DATA, x
+    jsr print_acc
     rts
 
 }
@@ -393,7 +406,7 @@ print_letter:
 #if ENABLE_PRINT
 
     print_hex__i8(i16_val >> 8)
-    print_hex__i8(i16_val & $08)
+    print_hex__i8(i16_val & $ff)
 
 #endif
 }
