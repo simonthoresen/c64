@@ -162,6 +162,44 @@ no_carry:
     sta a16_var + 1
 }
 
+.macro cmp__a16(a16_lhs, a16_rhs) 
+{
+    lda a16_lhs
+    sec
+    sbc a16_rhs
+    php
+    lda a16_lhs + 1
+    sbc a16_rhs + 1
+    php
+    pla
+    sta C64__ZEROP_BYTE0
+    pla
+    and #%00000010
+    ora #%11111101
+    and C64__ZEROP_BYTE0
+    pha
+    plp
+}
+
+.macro cmp__i16(a16_lhs, i16_rhs) 
+{
+    lda a16_lhs
+    sec
+    sbc #<i16_rhs
+    php
+    lda a16_lhs + 1
+    sbc #>i16_rhs
+    php
+    pla
+    sta C64__ZEROP_BYTE0
+    pla
+    and #%00000010
+    ora #%11111101
+    and C64__ZEROP_BYTE0
+    pha
+    plp	
+}
+
 
 //            BCC/BCS BEQ/BNE BMI/BPL
 // acc = arg:  Carry,  Zero,  !Neg
@@ -403,22 +441,6 @@ no_carry:
 		}
 	}
     .return default_val
-}
-
-
-// ------------------------------------------------------------
-//
-// Printing to the screen.
-//
-// ------------------------------------------------------------
-.macro print_word(src, pos_x, pos_y) {
-    set_cursor__i8(pos_x, pos_y)
-    print_hex__a16(src)
-}
-
-.macro print_byte(src, pos_x, pos_y) {
-    set_cursor__i8(pos_x, pos_y)
-    print_hex__a8(src)
 }
 
 
