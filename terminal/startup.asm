@@ -22,7 +22,7 @@ main:
     lda _char
     print_acc()
     print__i8('$')
-//    print_hex__i16($1234)
+    print_hex__a8(C64__COLOR_BORDER)
     print__i8(':')
     wait_vblank()
 /*    .for (var i = 0; i < 6; i++) {
