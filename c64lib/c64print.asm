@@ -17,13 +17,12 @@ _cursor_x:
     .byte $00
 _cursor_y: 
     .byte $00
+
+#if ENABLE_PRINT_FONT
 _char_map:
-    #if ENABLE_PRINT_FONT
-        .fill  64, index_of(C64__CHARSET.charAt(i), PRINT_FONT, $ff)
-        .fill 192, $ff
-    #else
-        .fill 256, i
-    #endif
+    .fill 256, index_of(i, PRINT_FONT, $ff)
+#endif
+
 }
 #endif
 
@@ -52,8 +51,12 @@ print_acc:
 !:
 
     // write char to screen
+#if ENABLE_PRINT_FONT
     ldy C64__ZEROP_BYTE0
     lda print._char_map, y
+#else
+    lda C64__ZEROP_BYTE0
+#endif
     ldy _cursor_x
     sta (C64__ZEROP_WORD0), y
 

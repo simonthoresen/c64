@@ -1,7 +1,7 @@
 BasicUpstart2(startup)
 #define ENABLE_PRINT
 //#define ENABLE_PRINT_FONT
-//.const PRINT_FONT = @" abcdefghijklmnopqrstuvwxyz"
+.const PRINT_FONT = @" abcdefghijklmnopqrstuvwxyz"
 #import "../c64lib/c64lib.asm"
 
 _char: 
@@ -12,7 +12,6 @@ startup:
     clear_screen($20)
 
     set_cursor__i8(20, 15)
-
 main:
     inc C64__COLOR_BORDER
     inc _char
