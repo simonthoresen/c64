@@ -331,7 +331,11 @@ no_carry:
 
     // The method shown here to store the registers is the most orthodox and most failsafe.
 
-    push_state()
+    pha
+    txa 
+    pha
+    tya
+    pha
 
     lda #$ff            // this is the orthodox and safe way of clearing the interrupt condition of the VICII.
     sta C64__IRQ_STATUS // if you don't do this the interrupt condition will be present all the time and you end
@@ -369,7 +373,11 @@ no_carry:
 
 .macro leave_irq()
 {
-    pop_state()
+    pla
+    tay
+    pla
+    tax
+    pla
 }
 
 
@@ -404,70 +412,14 @@ no_carry:
 //
 // ------------------------------------------------------------
 .macro print_word(src, pos_x, pos_y) {
-    print_byte(src+1, pos_x, pos_y)
-    print_byte(src, pos_x + 2, pos_y)
+    set_cursor__i8(pos_x, pos_y)
+    print_hex__a16(src)
 }
 
 .macro print_byte(src, pos_x, pos_y) {
-    push_state()    
-    lda src
-    ldx #(pos_y * 40 + pos_x)
-    jsr print.byte
-    pop_state()
+    set_cursor__i8(pos_x, pos_y)
+    print_hex__a8(src)
 }
-
-.macro push_state() {
-    pha
-    txa 
-    pha
-    tya
-    pha
-}
-
-.macro pop_state() {
-    pla
-    tay
-    pla
-    tax
-    pla
-}
-
-.namespace print {
-
-byte:
-    pha
-    lsr
-    lsr
-    lsr
-    lsr
-    jsr nibble
-    
-    pla
-    and #$0f
-    inx
-    jsr nibble
-    rts
-
-nibble:
-    cmp #$0a
-    bcs letter
-
-digit:
-    ora #$30
-    jmp !+
-
-letter:
-    clc
-    sbc #$08
-
-!:
-    sta C64__SCREEN_DATA, x
-
-    lda C64__COLOR
-    sta C64__SCREEN_COLOR, x
-    rts
-
-} 
 
 
 // ------------------------------------------------------------

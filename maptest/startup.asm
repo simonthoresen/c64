@@ -2,6 +2,9 @@ BasicUpstart2(startup)
 #import "../c64lib/c64lib.asm"
 #import "data.asm"
 
+.const C64__ZEROP_BYTE = C64__ZEROP_BYTE0
+.const C64__ZEROP_BYTE2 = C64__ZEROP_FREE + 0
+
 .const BEAM_L = $0f
 .const BEAM_R = $10
 .const WALL_UL = $77
