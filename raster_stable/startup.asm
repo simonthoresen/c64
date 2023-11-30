@@ -23,7 +23,7 @@ main:
 
 
 irq1:
-   stable_irq(do_irq1, $68, irq2)
+   stable_irq(do_irq1)
    rti
 
 do_irq1:
@@ -31,10 +31,14 @@ do_irq1:
    sta C64__COLOR_BORDER	
    lda #$05
    sta C64__COLOR_BG
+
+   lda #$68
+   sta C64__RASTER_LINE
+   set__i16(C64__IRQ, irq2) 
    rts
 
 irq2:
-   stable_irq(do_irq2, $34, irq1)
+   stable_irq(do_irq2)
    rti
 
 do_irq2:
@@ -42,5 +46,9 @@ do_irq2:
    sta C64__COLOR_BORDER	
    lda #$07
    sta C64__COLOR_BG
+
+   lda #$34
+   sta C64__RASTER_LINE
+   set__i16(C64__IRQ, irq1) 
    rts
    

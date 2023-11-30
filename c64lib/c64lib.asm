@@ -421,52 +421,48 @@ no_carry:
     pla
 }
 
-.macro stable_irq(irq_handler, next_line, next_handler)
+.macro stable_irq(irq_handler)
 {
-	// [7] cycles spent to get in here
-   sta _lda + 1 // [4]
-   stx _ldx + 1 // [4]
-   sty _ldy + 1 // [4]
+    // [7] cycles spent to get in here
+    sta _lda + 1 // [4]
+    stx _ldx + 1 // [4]
+    sty _ldy + 1 // [4]
 
-   // [16] cycles to set stable handler
-   set__i16(C64__IRQ, _stable_irq) 
+    // [16] cycles to set stable handler
+    set__i16(C64__IRQ, _stable_irq) 
 
-   inc C64__RASTER_LINE	// [6] request irq for next line
-   asl C64__IRQ_STATUS	// [6] ack current interrupt
-   tsx // [2] store my stack pointer for stable irq
-   cli // [2] enable irq to trigger while nop
+    inc C64__RASTER_LINE // [6] request irq for next line
+    asl C64__IRQ_STATUS	// [6] ack current interrupt
+    tsx // [2] store my stack pointer for stable irq
+    cli // [2] enable irq to trigger while nop
 
-   // [51] cycles up to this point
-   nop // [53]
-   nop // [55]
-   nop // [57]
-   nop // [59]
-   nop // [61]
-   nop // [63]
-   nop // [65]
-   // will never get here, stable irq will take over   
+    // [51] cycles up to this point
+    nop // [53]
+    nop // [55]
+    nop // [57]
+    nop // [59]
+    nop // [61]
+    nop // [63]
+    nop // [65]
+    // will never get here, stable irq will take over   
 
 _stable_irq:
-   // [7] cycles to get here
-   txs // [2] restore stack pointer to entry of parent
+    // [7] cycles to get here
+    txs // [2] restore stack pointer to entry of parent
+    dec C64__RASTER_LINE // [6] reset irq back to previous
 	
-   // [47] busy loop until we get the raster into the right border
-   ldx #$09	// [2]
-!: dex		// [2]
-   bne !-	// [3]
- 
-   // [66] total cycles spent
-   jsr irq_handler
- 
-   set__i16(C64__IRQ, next_handler) 
-
-   lda #next_line // TODO: include upper
-   sta C64__RASTER_LINE
-   asl C64__IRQ_STATUS // ack raster irq
+    // busy loop until we get the raster into the right border
+    ldx #$07 // [2] -> 17
+!:  dex      // [2]
+    bne !-   // [3]
+     
+    // [52] total cycles spent
+    jsr irq_handler
+    asl C64__IRQ_STATUS  // [6] ack raster irq
 
 _lda: lda #$00
-_ldx:	ldx #$00
-_ldy:	ldy #$00
+_ldx: ldx #$00
+_ldy: ldy #$00
 }
 
 // ------------------------------------------------------------
