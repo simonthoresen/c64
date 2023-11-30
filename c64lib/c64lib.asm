@@ -452,7 +452,7 @@ _stable_irq:
     dec C64__RASTER_LINE // [6] reset irq back to previous
 	
     // busy loop until we get the raster into the right border
-    ldx #$07 // [2] -> 17
+    ldx #$08 // [2] -> 17
 !:  dex      // [2]
     bne !-   // [3]
      
