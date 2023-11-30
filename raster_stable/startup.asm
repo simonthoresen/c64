@@ -1,117 +1,95 @@
-.pc = $0801
-:BasicUpstart(main)
+:BasicUpstart2(startup)
+#import "../c64lib/c64lib.asm"
 
-.pc = $2000		//Assemble to $2000
-main: 
-         sei		//Disable IRQ's
-         lda #$7f	//Disable CIA IRQ's
-         sta $dc0d
-         sta $dd0d
+startup: 
+   enter_startup()
+   setup_irq($0034, irq1)
 
-         lda #$35	//Bank out kernal and basic
-         sta $01	//$e000-$ffff
- 
-         lda #<irq1	//Install RASTER IRQ
-         ldx #>irq1	//into Hardware
-         sta $fffe	//Interrupt Vector
-         stx $ffff
- 
- 
-         lda #$01	//Enable RASTER IRQs
-         sta $d01a
-         lda #$34	//IRQ on line 52
-         sta $d012
-         lda #$1b	//Clear the High bit (lines 256-318)
-         sta $d011
-         lda #$0e	//Set Background
-         sta $d020	//and Border colors
-         lda #$06
-         sta $d021
-         lda #$00
-         sta $d015	//turn off sprites
- 
-         jsr clrscreen
-         jsr clrcolor
-         jsr printtext
- 
-         asl $d019	// Ack any previous raster interrupt
-         bit $dc0d   	// reading the interrupt control registers 
-         bit $dd0d	// clears them
- 
-         cli		//Allow IRQ's
- 
-         jmp *		//Endless Loop
- 
+   lda #$0e
+   sta C64__COLOR_BORDER
+   lda #$06
+   sta C64__COLOR_BG
+   lda #$00
+   sta C64__SPRITE_ENABLED
+   clear_screen($20)
+
+   asl C64__IRQ_STATUS
+   bit C64__IRQ_CIA1
+   bit C64__IRQ_CIA2
+   leave_startup()
+
+main:
+   jmp main
+
+
 //===========================================================================================
 // Main interrupt handler
 // [x] denotes the number of cycles 
 //=========================================================================================== 
 irq1:
-			//The CPU cycles spent to get in here		[7]
-         sta reseta1	//Preserve A,X and Y				[4]
-         stx resetx1	//Registers					[4]
-         sty resety1	//using self modifying code			[4]
- 
-         lda #<irq2	//Set IRQ Vector				[4]
-         ldx #>irq2	//to point to the				[4]
-			//next part of the	
-         sta $fffe	//Stable IRQ					[4]
-         stx $ffff   	//						[4]
-         inc $d012	//set raster interrupt to the next line		[6]
-         asl $d019	//Ack raster interrupt				[6]
-         tsx		//Store the stack pointer! It points to the	[2]
-         cli		//return information of irq1.			[2]
-         		//Total spent cycles up to this point		[51]
-         nop		//						[53]
-         nop		//						[55]
-         nop		//						[57]
-         nop		//						[59]
-         nop		//Execute nop's					[61]
-         nop		//until next RASTER				[63]
-         nop		//IRQ Triggers					
+{
+	// [7] cycles spent to get in here
+   sta _lda + 1 // [4]
+   stx _ldx + 1 // [4]
+   sty _ldy + 1 // [4]
 
-//===========================================================================================
-// Part 2 of the Main interrupt handler
-//===========================================================================================                  
-irq2:
-         txs		//Restore stack pointer to point the the return
-			//information of irq1, being our endless loop.
+   // [16] cycles to set next handler
+   set__i16(C64__IRQ_LO, _stable_irq) 
+
+   inc C64__RASTER_LINE	// [6] set irq for the next line
+   asl C64__IRQ_STATUS	// [6] ack current interrupt
+   tsx // [2] store my stack pointer for stable irq
+   cli // [2] enable irq to trigger while nop
+
+   // [51] cycles up to this point
+   nop // [53]
+   nop // [55]
+   nop // [57]
+   nop // [59]
+   nop // [61]
+   nop // [63]
+   nop // [65]
+   // will never get here, stable irq will take over   
+
+
+_stable_irq:
+   // [7] cycles to get here
+   txs // [2] restore stack pointer to entry of parent
 	
-         ldx #$09	//Wait exactly 9 * (2+3) cycles so that the raster line
-         dex		//is in the border				[2]
-         bne *-1	//						[3]
+   // [47] busy loop until we get the raster into the right border
+   ldx #$09	// [2]
+!: dex		// [2]
+   bne !-	// [3]
  
-         lda #$00	//Set the screen and border colors
-         ldx #$05
-         sta $d020	
-         stx $d021
- 
-         lda #<irq3	//Set IRQ to point
-         ldx #>irq3	//to subsequent IRQ
-         ldy #$68	//at line $68
-         sta $fffe
-         stx $ffff
-         sty $d012
-         asl $d019	//Ack RASTER IRQ
- 
-lab_a1:	lda #$00	//Reload A,X,and Y
-.label reseta1 = lab_a1+1
+   // [66] total cycles spent
 
-lab_x1:	ldx #$00
-.label resetx1 = lab_x1+1
-
-lab_y1:	ldy #$00
-.label	resety1 = lab_y1+1
+   lda #$00
+   sta C64__COLOR_BORDER	
+   lda #$05
+   sta C64__COLOR_BG
  
-         rti		//Return from IRQ
+   set__i16(C64__IRQ, irq3) 
+
+   lda #$68
+   sta C64__RASTER_LINE
+   asl C64__IRQ_STATUS // ack raster irq
+
+_lda: lda #$00
+_ldx:	ldx #$00
+_ldy:	ldy #$00
+
+   rti
+}
+
 
 //===========================================================================================
 // Part 3 of the Main interrupt handler
 //===========================================================================================           
 irq3:
-         sta reseta2	//Preserve A,X,and Y
-         stx resetx2	//Registers
-         sty resety2         
+{
+         sta _lda + 1	//Preserve A,X,and Y
+         stx _ldx + 1	//Registers
+         sty _ldy + 1         
 
          ldy #$13	//Waste time so this line is drawn completely
          dey		//	[2]
@@ -131,75 +109,9 @@ irq3:
          sty $d012
          asl $d019	//Ack RASTER IRQ
  
-lab_a2:	lda #$00	//Reload A,X,and Y
-.label reseta2  = lab_a2+1
-
-lab_x2:	ldx #$00
-.label resetx2  = lab_x2+1
-
-lab_y2:	ldy #$00
-.label resety2  = lab_y2+1
+_lda: lda #$00	//Reload A,X,and Y
+_ldx:	ldx #$00
+_ldy:	ldy #$00
  
          rti		//Return from IRQ
-
-//===========================================================================================
-// Clrscreen - clears the screen memory at $0400
-//===========================================================================================         
-clrscreen:
-	lda #$20	//Clear the screen
-	ldx #$00
-clrscr:	sta $0400,x
-	sta $0500,x
-	sta $0600,x
-	sta $0700,x
-	dex
-	bne clrscr
-	rts
-
-//===========================================================================================
-// Clrcolor - clears the color memory at $d800
-//===========================================================================================         
-clrcolor:
-         lda #$03    //Clear color memory
-         ldx #$00
-clrcol:	sta $d800,x
-         sta $d900,x
-         sta $da00,x
-         sta $db00,x
-         dex
-         bne clrcol
-         rts
-
-//===========================================================================================
-// Printtext - prints a text in lower case
-//===========================================================================================                   
-printtext:
-         lda #$16    //C-set = lower case
-         sta $d018
- 
-         ldx #$00
-moretext: lda text1,x
- 
-         bpl lower   //upper case ?
-         eor #$80    //yes
- 
-         bne lower+2
- 
-lower:    and #$3f    //lower case
-         sta $0450,x
-         inx
-         cpx #$78
-         bne moretext
-exit:     rts
- 
-
-//===========================================================================================
-// Data
-//===========================================================================================         
-text1:
-         .text "Stable Raster IRQ sourc"
-         .text "Stable Raster IRQ sourc"
-         .text "Stable Raster IRQ sourc"
-         .text "Stable Raster IRQ sourc"
-         .text "Stable Raster IRQ sourc"
-         .text "Stable Raster IRQ sourc"
+}
