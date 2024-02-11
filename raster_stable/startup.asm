@@ -32,7 +32,7 @@ do_irq1:
    lda #$05
    sta C64__COLOR_BG
 
-   lda #$68
+   lda #$e0
    sta C64__RASTER_LINE
    set__i16(C64__IRQ, irq2) 
    rts
@@ -47,7 +47,7 @@ do_irq2:
    lda #$07
    sta C64__COLOR_BG
 
-   lda #$34
+   lda #$20
    sta C64__RASTER_LINE
    set__i16(C64__IRQ, irq1) 
    rts

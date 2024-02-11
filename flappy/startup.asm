@@ -6,7 +6,6 @@ BasicUpstart2(startup)
 
 *=$4000 "Main Program"
 #import "../c64lib/c64lib.asm"
-#import "../c64lib/c64tick.asm"
 #import "bird.asm"
 
 // ------------------------------------------------------------
@@ -58,7 +57,7 @@ startup:
 	show_bird(PLAYER_2_ID, C64__LGREEN)
 
 main_loop:
-	sync_tick(0)
+	wait_vblank()
 	
     tick_sprite(_player_1_spr)
 	tick_bird(PLAYER_1_ID)
